@@ -16,7 +16,11 @@ export async function enqueueScan(scanId) {
     { scanId },
     {
       removeOnComplete: true,
-      attempts: 1,
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 2000,
+      },
     },
   )
 }

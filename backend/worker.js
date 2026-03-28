@@ -1,6 +1,6 @@
 import process from 'node:process'
 import IORedis from 'ioredis'
-import { Worker } from 'bullmq'
+import { UnrecoverableError, Worker } from 'bullmq'
 import { config } from './lib/config.js'
 import { initDb } from './lib/db.js'
 import { analyzeInput } from './lib/scanner.js'
@@ -19,23 +19,30 @@ const redisConnection = new IORedis(config.redisUrl, {
 async function processScanJob(scanId) {
   const scan = await getScan(scanId)
   if (scan == null) {
-    throw new Error(`Scan ${scanId} not found`)
+    throw new UnrecoverableError(`Scan ${scanId} not found`)
   }
 
   await setScanRunning(scanId)
 
   try {
-    const policies = await getPolicies()
+    const effectivePolicies = await getPolicies(scan.userId)
     const result = await analyzeInput({
       inputType: scan.inputType,
       inputValue: scan.inputValue,
-      policies,
+      policies: effectivePolicies,
     })
 
     await setScanCompleted(scanId, result)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown worker error'
     await setScanFailed(scanId, message)
+    if (
+      message.includes('invalid_repo_url') ||
+      message.includes('repo_too_large') ||
+      message.includes('Only GitHub repository URLs are allowed')
+    ) {
+      throw new UnrecoverableError(message)
+    }
     throw error
   }
 }
@@ -47,7 +54,7 @@ async function boot() {
     config.scanQueueName,
     async (job) => {
       const scanId = String(job.data?.scanId || '')
-      if (!scanId) throw new Error('Missing scanId in job payload')
+      if (!scanId) throw new UnrecoverableError('Missing scanId in job payload')
       await processScanJob(scanId)
     },
     {

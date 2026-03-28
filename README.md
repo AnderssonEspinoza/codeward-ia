@@ -1,20 +1,34 @@
-# CodeGuard AI (Frontend + Backend OSS)
+# CodeGuard AI
 
-Proyecto de portafolio orientado a auditoria de codigo con enfoque DevSecOps.
+Asistente de code review orientado a seguridad y compliance, con arquitectura real:
+API + worker + cola + PostgreSQL + Redis.
 
 ## Stack
 
 - Frontend: React + Vite + Tailwind
-- Backend: Node.js + Express (API) + BullMQ (worker)
-- Persistencia: PostgreSQL
-- Cola de trabajos: Redis
-- Analisis: reglas locales OSS (sin API paga)
-- IA opcional: Ollama local (`OLLAMA_MODEL`)
+- Backend: Node.js + Express
+- Worker: BullMQ
+- DB: PostgreSQL
+- Cola: Redis
+- Explicacion opcional: Ollama local
+- Auth: GitHub OAuth + session server-side
 
-## Requisitos
+## Estado del analisis (honesto)
 
-- Node.js 20+
-- pnpm
+- `direct`: hallazgos confirmados por scanner/tool.
+- `heuristic`: hallazgos por reglas locales regex.
+- `inferred`: riesgos arquitectonicos inferidos por contexto.
+
+Si un escaneo real falla, la UI muestra error. El modo demo con datos simulados es manual.
+Si inicias sesión con GitHub, historial y políticas quedan aislados por usuario.
+
+## Deteccion actual
+
+- Heuristico local (siempre disponible)
+- Gitleaks (si esta instalado en el host)
+- Semgrep (si esta instalado en el host)
+- OSV-Scanner (si esta instalado en el host)
+- Trivy (si esta instalado en el host)
 
 ## Instalacion
 
@@ -23,52 +37,75 @@ pnpm install
 cp .env.example .env
 ```
 
-Por defecto usa Postgres en `localhost:55432` para evitar conflicto con instalaciones locales en `5432`.
-
-## Levantar infraestructura (PostgreSQL + Redis)
+## Infra local
 
 ```bash
 docker compose up -d
 ```
 
-## Ejecutar app completa
-
-Frontend + API + worker en paralelo:
+## Ejecutar
 
 ```bash
 pnpm run dev:full
 ```
 
-Comandos por separado:
+Comandos separados:
 
 ```bash
-pnpm run api      # backend en http://localhost:8787
-pnpm run worker   # worker de escaneo
-pnpm run dev      # frontend en http://localhost:5173
-```
-
-## Variables opcionales (Ollama local)
-
-Si tienes Ollama instalado y quieres resumen IA local:
-
-```bash
-export OLLAMA_MODEL=qwen2.5-coder:7b
-export OLLAMA_URL=http://127.0.0.1:11434
 pnpm run api
 pnpm run worker
+pnpm run dev
 ```
 
-Si no configuras estas variables, el backend usa resumen deterministico local.
+## GitHub OAuth (real)
 
-## Endpoints backend
+1. Crea una OAuth App en GitHub.
+2. Configura callback URL: `http://localhost:8787/auth/github/callback`
+3. Completa en `.env`:
+
+```bash
+GITHUB_CLIENT_ID=...
+GITHUB_CLIENT_SECRET=...
+GITHUB_CALLBACK_URL=http://localhost:8787/auth/github/callback
+FRONTEND_URL=http://localhost:5173
+SESSION_SECRET=un-secreto-largo
+```
+
+Si no defines `GITHUB_CLIENT_ID` y `GITHUB_CLIENT_SECRET`, la app funciona en modo invitado.
+
+## Variables de entorno
+
+- `ADMIN_KEY`: opcional para editar políticas en modo invitado (`x-admin-key`)
+- `SCAN_TIMEOUT_MS`: timeout para tareas externas/scanners
+- `MAX_REPO_SIZE_KB`: limite de tamano de repo para escaneo
+- `VITE_ADMIN_KEY`: key usada por UI para editar políticas en modo invitado local
+- `CORS_ORIGINS`: orígenes permitidos para API
+- `FRONTEND_URL`: URL del frontend para redirects OAuth
+- `SESSION_SECRET`: secreto para cookies de sesión
+- `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL`: OAuth
+- `GITHUB_TOKEN` (opcional): reduce limites de GitHub API
+- `OLLAMA_MODEL`, `OLLAMA_URL` (opcionales)
+
+## Endpoints
 
 - `GET /api/health`
-- `GET /api/policies`
-- `PUT /api/policies`
-- `GET /api/history`
+- `GET /api/me`
+- `GET /auth/github`
+- `GET /auth/github/callback`
+- `POST /auth/logout`
 - `POST /api/scans`
 - `GET /api/scans/:scanId`
+- `GET /api/scans/:scanId/export?format=json|sarif|markdown`
+- `GET /api/history`
+- `GET /api/policies`
+- `PUT /api/policies` (sesión GitHub o `x-admin-key` en modo invitado)
 
-## Nota
+## Exportes
 
-Este MVP evita costos de APIs pagas y demuestra arquitectura backend real (API + worker + cola + base de datos + analisis).
+- JSON
+- SARIF 2.1.0
+- Markdown
+
+## Licencia
+
+MIT. Ver [LICENSE](./LICENSE).

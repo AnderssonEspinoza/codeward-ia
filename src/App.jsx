@@ -15,14 +15,6 @@ const INITIAL_POLICIES = [
   { id: 'pol_3', category: 'legal', name: 'Prohibir Copyleft Fuerte (GPL)', active: true, desc: 'Alerta sobre licencias que obligan a abrir el código fuente.' }
 ];
 
-// Fallback por si la API falla
-const ERROR_MOCK = {
-  healthScore: 0,
-  explanation: "Error al conectar con el motor de IA. Por favor, intenta de nuevo.",
-  vulnerabilities: [],
-  licenses: []
-};
-
 // Respaldo realista si se acaban los tokens (Fallback Mock)
 const FALLBACK_MOCK = {
   healthScore: 68,
@@ -48,7 +40,16 @@ const FALLBACK_MOCK = {
 };
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY || '';
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const apiFetch = (url, options = {}) =>
+  fetch(url, {
+    credentials: 'include',
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+    },
+  });
 
 export default function App() {
   // Estado Global & Autenticación
@@ -65,6 +66,28 @@ export default function App() {
   const [inputValue, setInputValue] = useState('');
   const [scanResults, setScanResults] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [scanErrorDetail, setScanErrorDetail] = useState('');
+
+  // Cargar sesión real desde backend
+  useEffect(() => {
+    let cancelled = false;
+    const loadSession = async () => {
+      try {
+        const res = await apiFetch(`${API_BASE}/api/me`);
+        const data = await res.json();
+        if (!cancelled) {
+          setUser(data?.user || null);
+        }
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) setUser(null);
+      }
+    };
+    loadSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Cargar datos desde backend al iniciar sesión
   useEffect(() => {
@@ -78,8 +101,8 @@ export default function App() {
 
       try {
         const [historyRes, policiesRes] = await Promise.all([
-          fetch(`${API_BASE}/api/history`),
-          fetch(`${API_BASE}/api/policies`),
+          apiFetch(`${API_BASE}/api/history`),
+          apiFetch(`${API_BASE}/api/policies`),
         ]);
 
         const historyData = await historyRes.json();
@@ -108,8 +131,27 @@ export default function App() {
   }, [user]);
 
   // Manejo de Login/Logout
-  const handleLogin = () => setUser({ name: 'DevSecOps Pro', id: 'usr_123' });
-  const handleLogout = () => {
+  const handleLogin = () => {
+    apiFetch(`${API_BASE}/api/auth-config`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data?.githubOAuthConfigured) {
+          alert('OAuth de GitHub no está configurado aún. Completa GITHUB_CLIENT_ID y GITHUB_CLIENT_SECRET en .env');
+          return;
+        }
+        window.location.href = `${API_BASE}/auth/github`;
+      })
+      .catch((error) => {
+        console.error(error);
+        alert('No se pudo iniciar OAuth en este momento.');
+      });
+  };
+  const handleLogout = async () => {
+    try {
+      await apiFetch(`${API_BASE}/auth/logout`, { method: 'POST' });
+    } catch (error) {
+      console.error(error);
+    }
     setUser(null);
     setCurrentView('scanner');
   };
@@ -118,9 +160,10 @@ export default function App() {
   const analyzeWithAI = async (codeSnippet) => {
     setAppState('analyzing');
     setErrorMsg('');
+    setScanErrorDetail('');
     
     try {
-      const createRes = await fetch(`${API_BASE}/api/scans`, {
+      const createRes = await apiFetch(`${API_BASE}/api/scans`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -138,7 +181,7 @@ export default function App() {
       let pollResult = null;
       for (let attempt = 0; attempt < 40; attempt += 1) {
         await wait(1000);
-        const pollRes = await fetch(`${API_BASE}/api/scans/${scanId}`);
+        const pollRes = await apiFetch(`${API_BASE}/api/scans/${scanId}`);
         if (!pollRes.ok) continue;
 
         const pollData = await pollRes.json();
@@ -157,7 +200,7 @@ export default function App() {
       setScanResults(pollResult);
 
       if (user) {
-        const historyRes = await fetch(`${API_BASE}/api/history`);
+        const historyRes = await apiFetch(`${API_BASE}/api/history`);
         if (historyRes.ok) {
           const historyData = await historyRes.json();
           setScanHistory(historyData?.history || []);
@@ -167,10 +210,16 @@ export default function App() {
       setAppState('results');
     } catch (error) {
       console.error(error);
-      setErrorMsg('⚠️ Backend no disponible o error de escaneo. Mostrando Mock Data para demo local.');
-      setScanResults(FALLBACK_MOCK);
-      setAppState('results');
+      setErrorMsg('No se pudo completar un escaneo real.');
+      setScanErrorDetail(error instanceof Error ? error.message : 'Error desconocido');
+      setAppState('error');
     }
+  };
+
+  const useDemoResults = () => {
+    setErrorMsg('Modo demo activado manualmente con datos simulados.');
+    setScanResults(FALLBACK_MOCK);
+    setAppState('results');
   };
 
   const handleAnalyze = () => {
@@ -216,7 +265,7 @@ export default function App() {
               </>
             ) : (
               <button onClick={handleLogin} className="flex items-center gap-2 text-sm font-semibold bg-white text-slate-900 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors">
-                <FaGithub className="w-4 h-4" /> Iniciar Sesión
+                <FaGithub className="w-4 h-4" /> Iniciar Sesión GitHub
               </button>
             )}
           </div>
@@ -235,6 +284,14 @@ export default function App() {
               <InputView inputType={inputType} setInputType={setInputType} inputValue={inputValue} setInputValue={setInputValue} onAnalyze={handleAnalyze} isAuth={!!user} />
             )}
             {appState === 'analyzing' && <AnalyzingView />}
+            {appState === 'error' && (
+              <ScanErrorView
+                errorMsg={errorMsg}
+                errorDetail={scanErrorDetail}
+                onRetry={() => setAppState('input')}
+                onUseDemo={useDemoResults}
+              />
+            )}
             {appState === 'results' && <ResultsDashboard onReset={resetApp} results={scanResults} error={errorMsg} isAuth={!!user} />}
           </div>
         )}
@@ -258,10 +315,10 @@ function InputView({ inputType, setInputType, inputValue, setInputValue, onAnaly
     <div className="max-w-3xl mx-auto mt-12">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-extrabold text-slate-100 mb-4 tracking-tight">
-          Auditoría de Código con IA
+          Code Review Assistant (OSS)
         </h1>
         <p className="text-lg text-slate-400">
-          Pega un fragmento de código real o un enlace a GitHub. La IA analizará la seguridad, vulnerabilidades y calidad en tiempo real.
+          Pega un fragmento de código o un enlace de GitHub. El motor local analiza seguridad, riesgos y cumplimiento sin APIs pagas.
         </p>
       </div>
 
@@ -298,9 +355,9 @@ function InputView({ inputType, setInputType, inputValue, setInputValue, onAnaly
           <div className="mt-6 flex items-center justify-between">
             <div className="text-xs text-slate-500 flex items-center gap-1.5">
               {!isAuth ? (
-                <span className="text-amber-500 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5"/> Modo Invitado: Los escaneos no se guardarán en tu historial.</span>
+                <span className="text-amber-500 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5"/> Modo invitado: inicia sesión con GitHub para historial y políticas por usuario.</span>
               ) : (
-                <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500"/> Entorno Seguro. Resultados cifrados.</span>
+                <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500"/> Sesión GitHub activa.</span>
               )}
             </div>
             <button
@@ -311,6 +368,28 @@ function InputView({ inputType, setInputType, inputValue, setInputValue, onAnaly
               Auditar con IA <ChevronRight className="w-4 h-4" />
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScanErrorView({ errorMsg, errorDetail, onRetry, onUseDemo }) {
+  return (
+    <div className="max-w-3xl mx-auto mt-12">
+      <div className="bg-slate-900 border border-rose-500/30 rounded-2xl p-8">
+        <h2 className="text-2xl font-bold text-rose-300 mb-3">Escaneo real no completado</h2>
+        <p className="text-slate-300">{errorMsg}</p>
+        {errorDetail && (
+          <p className="text-sm text-slate-400 mt-2">Detalle técnico: {errorDetail}</p>
+        )}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button onClick={onRetry} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-sm font-medium text-slate-200">
+            Reintentar escaneo real
+          </button>
+          <button onClick={onUseDemo} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-semibold text-white">
+            Ver ejemplo con datos simulados
+          </button>
         </div>
       </div>
     </div>
@@ -401,7 +480,7 @@ function ResultsDashboard({ onReset, results, error, isAuth }) {
                 : ''}
             </p>
           )}
-          {!isAuth && <p className="text-amber-500 text-sm mt-1">⚠️ Este reporte es temporal. Inicia sesión para guardar tu historial.</p>}
+          {!isAuth && <p className="text-amber-500 text-sm mt-1">⚠️ Este reporte es de una sesión local de demostración.</p>}
         </div>
         <button onClick={onReset} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-sm font-medium text-slate-200 transition-colors flex items-center gap-2">
           <RefreshCw className="w-4 h-4" /> Nuevo Análisis
@@ -544,16 +623,25 @@ function GlobalDashboard({ onNewScan, history }) {
 function PoliciesView({ policies, setPolicies, isAuth }) {
   const togglePolicy = async (id) => {
     if (!isAuth) return;
-    const newPolicies = policies.map(p => p.id === id ? { ...p, active: !p.active } : p);
-    setPolicies(newPolicies);
+      const newPolicies = policies.map(p => p.id === id ? { ...p, active: !p.active } : p);
+      setPolicies(newPolicies);
     try {
-      await fetch(`${API_BASE}/api/policies`, {
+      const res = await apiFetch(`${API_BASE}/api/policies`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(ADMIN_KEY ? { 'x-admin-key': ADMIN_KEY } : {}),
+        },
         body: JSON.stringify({ policies: newPolicies }),
       });
+      if (!res.ok) {
+        setPolicies(policies);
+        const payload = await res.json().catch(() => ({}));
+        alert(payload?.error || 'No autorizado para editar politicas en este entorno.');
+      }
     } catch (error) {
       console.error(error);
+      setPolicies(policies);
     }
   };
 
@@ -598,8 +686,9 @@ function DocsView() {
         <ul className="list-disc pl-5 space-y-2 text-slate-400 text-sm">
           <li><strong>Frontend:</strong> React (Single Page Application).</li>
           <li><strong>Backend:</strong> API Node/Express local con endpoints de escaneo y políticas.</li>
-          <li><strong>Persistencia de Datos:</strong> Almacenamiento en archivo JSON desde backend (sin costo de nube).</li>
-          <li><strong>UX de Adquisición:</strong> Implementación de "Modo Invitado" (Guest Mode) para reducir barreras de entrada.</li>
+          <li><strong>Persistencia de Datos:</strong> PostgreSQL para historial y políticas.</li>
+          <li><strong>Cola:</strong> Redis + BullMQ para procesamiento asíncrono.</li>
+          <li><strong>Auth actual:</strong> GitHub OAuth con sesión de servidor (y modo invitado local).</li>
           <li><strong>Análisis OSS:</strong> Reglas locales de seguridad/licencias con soporte opcional de LLM local vía Ollama.</li>
         </ul>
       </div>
