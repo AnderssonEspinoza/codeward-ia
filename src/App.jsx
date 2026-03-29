@@ -39,7 +39,7 @@ const FALLBACK_MOCK = {
   ]
 };
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8787' : '');
 const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY || '';
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const apiFetch = (url, options = {}) =>

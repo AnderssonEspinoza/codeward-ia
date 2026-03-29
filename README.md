@@ -115,6 +115,20 @@ Flujo sugerido:
 
 Si solo usarás modo invitado por ahora, puedes dejar vacías las variables de GitHub OAuth.
 
+## Vercel proxy (recomendado)
+
+Este repo incluye `vercel.json` con rewrites para evitar cookies cross-site:
+
+- `/api/*` -> `https://codeward-api.onrender.com/api/*`
+- `/auth/*` -> `https://codeward-api.onrender.com/auth/*`
+
+Con esto, en producción el frontend usa misma origin y no depende de third-party cookies del navegador.
+En Vercel puedes dejar `VITE_API_URL` vacío o no definirlo.
+
+Si activas este proxy, configura GitHub OAuth callback con dominio de Vercel:
+
+- `https://codeward-ia.vercel.app/auth/github/callback`
+
 ## Endpoints
 
 - `GET /api/health`
