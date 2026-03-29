@@ -34,11 +34,17 @@ const logger = pino({
 })
 
 const app = express()
+app.set('trust proxy', 1)
 
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
   .split(',')
   .map((v) => v.trim())
   .filter(Boolean)
+
+const isCrossSiteProd = allowedOrigins.some(
+  (origin) =>
+    origin.startsWith('https://') && !origin.includes('localhost') && !origin.includes('127.0.0.1'),
+)
 
 app.use(
   cors({
@@ -72,8 +78,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7,
-      sameSite: 'lax',
-      secure: false,
+      sameSite: isCrossSiteProd ? 'none' : 'lax',
+      secure: isCrossSiteProd,
       httpOnly: true,
     },
   }),
