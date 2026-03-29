@@ -10,6 +10,8 @@ import { z } from 'zod'
 import pino from 'pino'
 import pinoHttp from 'pino-http'
 import { rateLimit } from 'express-rate-limit'
+import IORedis from 'ioredis'
+import { UnrecoverableError, Worker } from 'bullmq'
 import { config } from './lib/config.js'
 import { initDb, pool } from './lib/db.js'
 import {
@@ -20,7 +22,11 @@ import {
   getUserById,
   listScans,
   setPolicies,
+  setScanCompleted,
+  setScanFailed,
+  setScanRunning,
 } from './lib/repository.js'
+import { analyzeInput } from './lib/scanner.js'
 import { enqueueScan, getQueueStats } from './lib/queue.js'
 
 const logger = pino({
@@ -322,6 +328,7 @@ app.get('/api/health', async (req, res) => {
     service: 'codeguard-backend',
     db: dbOk ? 'up' : 'down',
     queue: queueStats,
+    workerMode: 'integrated',
     now: new Date().toISOString(),
   })
 })
@@ -433,10 +440,89 @@ app.use((err, req, res) => {
   return res.status(500).json({ error: 'Internal server error' })
 })
 
+function startIntegratedWorker() {
+  const redisConnection = new IORedis(config.redisUrl, {
+    maxRetriesPerRequest: null,
+    tls: config.redisUrl.startsWith('rediss://') ? {} : undefined,
+  })
+
+  const worker = new Worker(
+    config.scanQueueName,
+    async (job) => {
+      const scanId = String(job.data?.scanId || '')
+      if (!scanId) throw new UnrecoverableError('Missing scanId in job payload')
+
+      const scan = await getScan(scanId)
+      if (scan == null) throw new UnrecoverableError(`Scan ${scanId} not found`)
+
+      await setScanRunning(scanId)
+
+      try {
+        const effectivePolicies = await getPolicies(scan.userId)
+        const result = await analyzeInput({
+          inputType: scan.inputType,
+          inputValue: scan.inputValue,
+          policies: effectivePolicies,
+        })
+        await setScanCompleted(scanId, result)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown worker error'
+        await setScanFailed(scanId, message)
+
+        if (
+          message.includes('invalid_repo_url') ||
+          message.includes('repo_too_large') ||
+          message.includes('Only GitHub repository URLs are allowed')
+        ) {
+          throw new UnrecoverableError(message)
+        }
+        throw error
+      }
+    },
+    {
+      connection: redisConnection,
+      concurrency: 2,
+    },
+  )
+
+  worker.on('ready', () => {
+    logger.info(`[worker] Integrated BullMQ worker ready (queue: ${config.scanQueueName})`)
+  })
+
+  worker.on('completed', (job) => {
+    logger.info(`[worker] Scan completed: ${job.data?.scanId}`)
+  })
+
+  worker.on('failed', (job, err) => {
+    logger.error(`[worker] Scan failed: ${job?.data?.scanId} - ${err.message}`)
+  })
+
+  worker.on('error', (err) => {
+    logger.error({ err }, '[worker] Worker connection error')
+  })
+
+  const shutdown = async (signal) => {
+    logger.info(`[worker] Received ${signal}, closing worker...`)
+    await worker.close()
+    logger.info('[worker] Worker closed. Exiting.')
+    process.exit(0)
+  }
+
+  process.on('SIGTERM', () => {
+    shutdown('SIGTERM').catch((err) => logger.error({ err }, '[worker] Shutdown failed'))
+  })
+  process.on('SIGINT', () => {
+    shutdown('SIGINT').catch((err) => logger.error({ err }, '[worker] Shutdown failed'))
+  })
+
+  return worker
+}
+
 async function boot() {
   await initDb()
+  startIntegratedWorker()
   app.listen(config.port, () => {
-    logger.info(`CodeGuard backend listening on http://localhost:${config.port}`)
+    logger.info(`CodeGuard backend + worker listening on http://localhost:${config.port}`)
   })
 }
 

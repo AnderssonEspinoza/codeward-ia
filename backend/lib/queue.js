@@ -4,6 +4,7 @@ import { config } from './config.js'
 
 const redisConnection = new IORedis(config.redisUrl, {
   maxRetriesPerRequest: null,
+  tls: config.redisUrl.startsWith('rediss://') ? {} : undefined,
 })
 
 export const scanQueue = new Queue(config.scanQueueName, {

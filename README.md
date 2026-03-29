@@ -1,13 +1,13 @@
 # CodeGuard AI
 
 Asistente de code review orientado a seguridad y compliance, con arquitectura real:
-API + worker + cola + PostgreSQL + Redis.
+API + worker BullMQ integrado + cola + PostgreSQL + Redis.
 
 ## Stack
 
 - Frontend: React + Vite + Tailwind
 - Backend: Node.js + Express
-- Worker: BullMQ
+- Worker: BullMQ integrado en el proceso del API (modo free-friendly)
 - DB: PostgreSQL
 - Cola: Redis
 - Explicacion opcional: Ollama local
@@ -61,7 +61,6 @@ En producción (sin watch):
 
 ```bash
 pnpm run start:api
-pnpm run start:worker
 ```
 
 ## GitHub OAuth (real)
@@ -93,19 +92,18 @@ Si no defines `GITHUB_CLIENT_ID` y `GITHUB_CLIENT_SECRET`, la app funciona en mo
 - `GITHUB_TOKEN` (opcional): reduce limites de GitHub API
 - `OLLAMA_MODEL`, `OLLAMA_URL` (opcionales)
 
-## Deploy recomendado: Render + Supabase
+## Deploy recomendado: Render + Supabase (Render Free)
 
-Este repo ya incluye `render.yaml` para crear 2 servicios:
+Este repo ya incluye `render.yaml` para crear 1 servicio:
 
-- `codeward-api` (web service)
-- `codeward-worker` (worker service)
+- `codeward-api` (web service, incluye worker integrado)
 
 Flujo sugerido:
 
 1. Crea proyecto en Supabase y copia `DATABASE_URL` (pooler o direct connection).
 2. Crea Redis (Render Redis o Upstash) y copia `REDIS_URL`.
 3. En Render, conecta este repo y usa `render.yaml`.
-4. Configura en **ambos servicios**:
+4. Configura en `codeward-api`:
    - `DATABASE_URL`
    - `REDIS_URL`
    - `SESSION_SECRET`

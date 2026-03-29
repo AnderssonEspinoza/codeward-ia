@@ -30,22 +30,3 @@ services:
         sync: false
       - key: GITHUB_CALLBACK_URL
         sync: false
-
-  - type: worker
-    name: codeward-worker
-    runtime: node
-    plan: free
-    buildCommand: pnpm install --frozen-lockfile
-    startCommand: pnpm run start:worker
-    autoDeploy: true
-    envVars:
-      - key: NODE_VERSION
-        value: 20
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: SESSION_SECRET
-        sync: false
-      - key: ADMIN_KEY
-        sync: false
