@@ -73,6 +73,7 @@ app.use(
       tableName: 'user_sessions',
       createTableIfMissing: true,
     }),
+    proxy: true,
     secret: config.sessionSecret,
     resave: false,
     saveUninitialized: false,
@@ -277,15 +278,23 @@ app.get('/auth/github', (req, res, next) => {
   return passport.authenticate('github', { scope: ['user:email'] })(req, res, next)
 })
 
-app.get(
-  '/auth/github/callback',
-  passport.authenticate('github', {
-    failureRedirect: `${config.frontendUrl}/?auth=failed`,
-  }),
-  (req, res) => {
-    res.redirect(`${config.frontendUrl}/?auth=success`)
-  },
-)
+app.get('/auth/github/callback', (req, res, next) => {
+  passport.authenticate('github', (err, user) => {
+    if (err || !user) {
+      return res.redirect(`${config.frontendUrl}/?auth=failed`)
+    }
+
+    req.logIn(user, (loginErr) => {
+      if (loginErr) {
+        return res.redirect(`${config.frontendUrl}/?auth=failed`)
+      }
+
+      return req.session.save(() => {
+        res.redirect(`${config.frontendUrl}/?auth=success`)
+      })
+    })
+  })(req, res, next)
+})
 
 app.post('/auth/logout', (req, res) => {
   req.logout(() => {
