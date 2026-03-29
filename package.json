@@ -7,6 +7,8 @@
     "dev": "vite",
     "api": "node --watch backend/server.js",
     "worker": "node --watch backend/worker.js",
+    "start:api": "node backend/server.js",
+    "start:worker": "node backend/worker.js",
     "dev:full": "concurrently -n FRONT,API,WORKER -c cyan,green,magenta \"pnpm dev\" \"pnpm api\" \"pnpm worker\"",
     "build": "vite build",
     "lint": "eslint .",

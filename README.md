@@ -57,6 +57,13 @@ pnpm run worker
 pnpm run dev
 ```
 
+En producción (sin watch):
+
+```bash
+pnpm run start:api
+pnpm run start:worker
+```
+
 ## GitHub OAuth (real)
 
 1. Crea una OAuth App en GitHub.
@@ -85,6 +92,30 @@ Si no defines `GITHUB_CLIENT_ID` y `GITHUB_CLIENT_SECRET`, la app funciona en mo
 - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL`: OAuth
 - `GITHUB_TOKEN` (opcional): reduce limites de GitHub API
 - `OLLAMA_MODEL`, `OLLAMA_URL` (opcionales)
+
+## Deploy recomendado: Render + Supabase
+
+Este repo ya incluye `render.yaml` para crear 2 servicios:
+
+- `codeward-api` (web service)
+- `codeward-worker` (worker service)
+
+Flujo sugerido:
+
+1. Crea proyecto en Supabase y copia `DATABASE_URL` (pooler o direct connection).
+2. Crea Redis (Render Redis o Upstash) y copia `REDIS_URL`.
+3. En Render, conecta este repo y usa `render.yaml`.
+4. Configura en **ambos servicios**:
+   - `DATABASE_URL`
+   - `REDIS_URL`
+   - `SESSION_SECRET`
+   - `ADMIN_KEY`
+5. En `codeward-api` agrega además:
+   - `FRONTEND_URL` (tu dominio Vercel)
+   - `CORS_ORIGINS` (incluye tu dominio Vercel)
+   - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL` (si usarás login GitHub)
+
+Si solo usarás modo invitado por ahora, puedes dejar vacías las variables de GitHub OAuth.
 
 ## Endpoints
 
