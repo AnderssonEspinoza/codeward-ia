@@ -79,6 +79,7 @@ const LICENSE_PATTERNS = [
 
 const MAX_REPO_FILES = 25
 const MAX_FILE_BYTES = 120_000
+const DEFAULT_REQUIRED_SCANNERS = ['gitleaks', 'semgrep', 'osv-scanner']
 const ALLOWED_CODE_EXTENSIONS = new Set([
   '.js',
   '.jsx',
@@ -151,6 +152,20 @@ function scorePenalty(vulnerability) {
   return base
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value))
+}
+
+function parseRequiredScanners() {
+  const raw = process.env.REQUIRED_SCANNERS
+  if (!raw) return DEFAULT_REQUIRED_SCANNERS
+  const parsed = raw
+    .split(',')
+    .map((v) => v.trim().toLowerCase())
+    .filter(Boolean)
+  return parsed.length > 0 ? parsed : DEFAULT_REQUIRED_SCANNERS
+}
+
 function buildFallbackSummary({ inputType, vulnCount, licenseCount, hasHighRiskLicense }) {
   const target = inputType === 'repo' ? 'repositorio' : 'fragmento de codigo'
   const riskLine =
@@ -176,6 +191,16 @@ function safeJsonParse(raw) {
 async function commandExists(bin) {
   const result = await runCommand('which', [bin], { timeoutMs: 5000 })
   return result.code === 0
+}
+
+async function getToolAvailability(toolNames) {
+  const pairs = await Promise.all(
+    toolNames.map(async (tool) => {
+      const exists = await commandExists(tool)
+      return [tool, exists]
+    }),
+  )
+  return Object.fromEntries(pairs)
 }
 
 function runCommand(cmd, args, { cwd = process.cwd(), timeoutMs = config.scanTimeoutMs } = {}) {
@@ -660,6 +685,9 @@ export async function analyzeInput({ inputType, inputValue, policies }) {
   let cleanupRoot = ''
 
   const toolsUsed = ['heuristic-regex', 'heuristic-inference']
+  const requiredScanners = parseRequiredScanners()
+  const toolAvailability = await getToolAvailability(requiredScanners)
+  const missingRequiredTools = requiredScanners.filter((tool) => !toolAvailability[tool])
 
   try {
     if (inputType === 'repo') {
@@ -719,16 +747,50 @@ export async function analyzeInput({ inputType, inputValue, policies }) {
       licenses = licenses.concat(trivyResult.licenses)
     }
 
+    if (inputType === 'repo' && missingRequiredTools.length > 0) {
+      for (const missing of missingRequiredTools) {
+        vulnerabilities.push({
+          id: `COVERAGE-${missing.toUpperCase()}`,
+          tool: 'engine-coverage',
+          title: `Cobertura incompleta: falta ${missing}`,
+          severity: 'medium',
+          line: 0,
+          description:
+            `El entorno no tiene ${missing} instalado; la auditoria de seguridad/supply-chain queda parcialmente cubierta.`,
+          recommendation:
+            `Instala ${missing} en el runtime de escaneo para habilitar deteccion completa y reducir falsos negativos.`,
+          evidenceType: 'heuristic',
+        })
+      }
+    }
+
     vulnerabilities = dedupeById(vulnerabilities)
     licenses = dedupeLicenses(licenses)
 
-    let healthScore = 100
-    for (const vuln of vulnerabilities) healthScore -= scorePenalty(vuln)
-    if (licenses.some((l) => l.risk === 'high')) healthScore -= 15
+    let rawHealthScore = 100
+    for (const vuln of vulnerabilities) rawHealthScore -= scorePenalty(vuln)
+    if (licenses.some((l) => l.risk === 'high')) rawHealthScore -= 15
     if (inputType === 'repo' && scannedFiles === 0 && vulnerabilities.length === 0) {
-      healthScore = Math.min(healthScore, 70)
+      rawHealthScore = Math.min(rawHealthScore, 70)
     }
-    healthScore = Math.max(0, Math.min(100, healthScore))
+    rawHealthScore = clamp(rawHealthScore, 0, 100)
+
+    const directCount = vulnerabilities.filter((v) => v.evidenceType === 'direct').length
+    const totalFindings = vulnerabilities.length
+    const coverageRatio = inputType === 'repo' ? clamp(scannedFiles / MAX_REPO_FILES, 0, 1) : 1
+    const toolCoverageRatio =
+      requiredScanners.length > 0
+        ? clamp((requiredScanners.length - missingRequiredTools.length) / requiredScanners.length, 0, 1)
+        : 1
+    const directEvidenceRatio =
+      totalFindings > 0 ? clamp(directCount / totalFindings, 0, 1) : toolCoverageRatio
+    const confidence = clamp(
+      0.2 + 0.4 * toolCoverageRatio + 0.25 * coverageRatio + 0.15 * directEvidenceRatio,
+      0,
+      1,
+    )
+    const confidenceAdjustedScore = clamp(Math.round(rawHealthScore * (0.7 + 0.3 * confidence)), 0, 100)
+    const healthScore = confidenceAdjustedScore
 
     const context = { inputType, vulnerabilities, licenses, healthScore }
     let explanation = buildFallbackSummary({
@@ -750,6 +812,9 @@ export async function analyzeInput({ inputType, inputValue, policies }) {
     } else if (inputType === 'repo') {
       explanation = `${explanation} Se analizaron ${scannedFiles} archivos del repositorio.`
     }
+    if (missingRequiredTools.length > 0) {
+      explanation = `${explanation} Cobertura parcial: faltan scanners requeridos (${missingRequiredTools.join(', ')}).`
+    }
 
     const policyWarnings = []
     const hardcodedPolicy = policies.find((p) => p.id === 'pol_1' && p.active)
@@ -767,6 +832,11 @@ export async function analyzeInput({ inputType, inputValue, policies }) {
     if (licensePolicy && licenses.some((l) => l.risk === 'high')) {
       policyWarnings.push('Violacion de politica: licencia copyleft fuerte detectada.')
     }
+    if (missingRequiredTools.length > 0) {
+      policyWarnings.push(
+        `Cobertura incompleta: faltan scanners requeridos (${missingRequiredTools.join(', ')}).`,
+      )
+    }
 
     return {
       healthScore,
@@ -777,6 +847,16 @@ export async function analyzeInput({ inputType, inputValue, policies }) {
         engine: 'local-oss-orchestrator',
         llm: process.env.OLLAMA_MODEL ? `ollama:${process.env.OLLAMA_MODEL}` : 'none',
         tools: Array.from(new Set(toolsUsed)),
+        requiredScanners,
+        missingRequiredTools,
+        scoreBreakdown: {
+          rawHealthScore,
+          confidenceAdjustedScore,
+          confidence,
+          coverageRatio,
+          toolCoverageRatio,
+          directEvidenceRatio,
+        },
         policyWarnings,
         scannedFiles,
         repoReason,

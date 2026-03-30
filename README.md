@@ -30,6 +30,19 @@ Si inicias sesión con GitHub, historial y políticas quedan aislados por usuari
 - OSV-Scanner (si esta instalado en el host)
 - Trivy (si esta instalado en el host)
 
+## Matriz de cobertura (honesta)
+
+| Area | Detecta hoy | Tipo de evidencia |
+| --- | --- | --- |
+| Secretos hardcodeados | Regex local + Gitleaks | `heuristic` / `direct` |
+| SAST codigo fuente | Regex local + Semgrep | `heuristic` / `direct` |
+| Vulnerabilidades de dependencias | OSV-Scanner (+ Trivy opcional) | `direct` |
+| Riesgos arquitectonicos (contexto README/codigo) | Reglas inferidas | `inferred` |
+| Licencias | Regex local + Trivy | `heuristic` / `direct` |
+
+Scanners requeridos para cobertura minima de repo: `gitleaks`, `semgrep`, `osv-scanner`.
+Si faltan, el reporte marca cobertura incompleta y baja el score de confianza.
+
 ## Instalacion
 
 ```bash
@@ -91,6 +104,7 @@ Si no defines `GITHUB_CLIENT_ID` y `GITHUB_CLIENT_SECRET`, la app funciona en mo
 - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL`: OAuth
 - `GITHUB_TOKEN` (opcional): reduce limites de GitHub API
 - `OLLAMA_MODEL`, `OLLAMA_URL` (opcionales)
+- `REQUIRED_SCANNERS` (opcional): lista CSV de scanners requeridos (default: `gitleaks,semgrep,osv-scanner`)
 
 ## Deploy recomendado: Render + Supabase (Render Free)
 
@@ -148,6 +162,14 @@ Si activas este proxy, configura GitHub OAuth callback con dominio de Vercel:
 - JSON
 - SARIF 2.1.0
 - Markdown
+
+## E2E smoke test (remoto)
+
+```bash
+API_BASE_URL=https://codeward-api.onrender.com pnpm run test:e2e:remote
+```
+
+Valida flujo real: `health` -> crear scan -> polling -> export markdown.
 
 ## Licencia
 

@@ -480,6 +480,12 @@ function ResultsDashboard({ onReset, results, error, isAuth }) {
                 : ''}
             </p>
           )}
+          {results?.meta?.scoreBreakdown && (
+            <p className="text-slate-500 text-xs mt-1">
+              Confianza: {Math.round((results.meta.scoreBreakdown.confidence || 0) * 100)}% · Cobertura herramientas:{' '}
+              {Math.round((results.meta.scoreBreakdown.toolCoverageRatio || 0) * 100)}%
+            </p>
+          )}
           {!isAuth && <p className="text-amber-500 text-sm mt-1">⚠️ Este reporte es de una sesión local de demostración.</p>}
         </div>
         <button onClick={onReset} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-sm font-medium text-slate-200 transition-colors flex items-center gap-2">

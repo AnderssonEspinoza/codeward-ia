@@ -12,7 +12,8 @@
     "dev:full": "concurrently -n FRONT,API,WORKER -c cyan,green,magenta \"pnpm dev\" \"pnpm api\" \"pnpm worker\"",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e:remote": "node scripts/e2e-smoke.mjs"
   },
   "dependencies": {
     "bullmq": "^5.71.0",
