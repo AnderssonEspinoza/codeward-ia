@@ -129,6 +129,34 @@ Flujo sugerido:
 
 Si solo usarás modo invitado por ahora, puedes dejar vacías las variables de GitHub OAuth.
 
+## Deploy alternativo: Render (Docker con scanners instalados)
+
+Si quieres cobertura real con `gitleaks + semgrep + osv-scanner` en producción, usa el `Dockerfile` incluido.
+
+Pasos:
+
+1. En Render crea un **nuevo Web Service** desde este repo.
+2. Render detectará `Dockerfile` en la raíz y hará build Docker.
+3. Configura variables:
+   - `DATABASE_URL`
+   - `REDIS_URL`
+   - `SESSION_SECRET`
+   - `ADMIN_KEY`
+   - `FRONTEND_URL`
+   - `CORS_ORIGINS`
+   - `GITHUB_CLIENT_ID`
+   - `GITHUB_CLIENT_SECRET`
+   - `GITHUB_CALLBACK_URL`
+4. Deploy.
+
+Verificación rápida en runtime:
+
+```bash
+https://TU-API.onrender.com/api/health
+```
+
+Después de un scan de repo, revisa en respuesta `meta.tools` que incluya scanners OSS (`gitleaks`, `semgrep`, `osv-scanner`) cuando haya hallazgos o en warnings de cobertura.
+
 ## Vercel proxy (recomendado)
 
 Este repo incluye `vercel.json` con rewrites para evitar cookies cross-site:
