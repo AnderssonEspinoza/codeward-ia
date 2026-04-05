@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://codeward-api.onrender.com/api/:path*"
+      "destination": "https://codeward-api-docker.onrender.com/api/:path*"
     },
     {
       "source": "/auth/:path*",
-      "destination": "https://codeward-api.onrender.com/auth/:path*"
+      "destination": "https://codeward-api-docker.onrender.com/auth/:path*"
     }
   ]
 }
