@@ -42,10 +42,8 @@ RUN set -eux; \
     arm64) osv_arch="arm64" ;; \
     *) echo "Unsupported architecture: $arch"; exit 1 ;; \
   esac; \
-  curl -fsSL "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_${osv_arch}.zip" -o /tmp/osv.zip; \
-  unzip /tmp/osv.zip -d /tmp/osv; \
-  install -m 0755 /tmp/osv/osv-scanner /usr/local/bin/osv-scanner; \
-  rm -rf /tmp/osv /tmp/osv.zip
+  curl -fsSL "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_${osv_arch}" -o /usr/local/bin/osv-scanner; \
+  chmod +x /usr/local/bin/osv-scanner
 
 RUN corepack enable
 
