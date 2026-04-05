@@ -17,7 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 # Semgrep (SAST)
-RUN pip3 install --no-cache-dir semgrep
+# Debian Bookworm blocks global pip installs by default (PEP 668),
+# so we explicitly allow it for this container image.
+RUN pip3 install --no-cache-dir --break-system-packages semgrep
 
 # Gitleaks (secrets scanner)
 RUN set -eux; \
