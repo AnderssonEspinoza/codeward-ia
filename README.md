@@ -1,6 +1,7 @@
 # CodeWard IA
 
-Asistente de code review orientado a seguridad y compliance, con arquitectura real:
+CodeWard IA es un auditor OSS de seguridad y compliance para repositorios y snippets, en etapa MVP.
+Su enfoque es entregar hallazgos accionables con evidencia trazable y una arquitectura backend real:
 API + worker BullMQ integrado + cola + PostgreSQL + Redis.
 
 ## Demo
@@ -24,6 +25,13 @@ Haz click en la imagen para abrir el video: [public/demo.mp4](./public/demo.mp4)
 
 ![CodeWard IA - Resultado](./public/image2.png)
 
+## Propuesta de valor
+
+- Escaneo de código con salida utilizable para desarrollo real (no solo una demo visual).
+- Evidencia clasificada por tipo (`direct`, `heuristic`, `inferred`) para evitar falsas certezas.
+- Flujo asíncrono con cola y persistencia para soportar análisis de repositorios completos.
+- Exportes estándar (`SARIF`, `Markdown`, `JSON`) para integraciones futuras.
+
 ## Stack
 
 - Frontend: React + Vite + Tailwind
@@ -42,6 +50,20 @@ Haz click en la imagen para abrir el video: [public/demo.mp4](./public/demo.mp4)
 
 Si un escaneo real falla, la UI muestra error. El modo demo con datos simulados es manual.
 Si inicias sesión con GitHub, historial y políticas quedan aislados por usuario.
+
+## Alcance actual del MVP
+
+- Analiza snippets y repositorios GitHub.
+- Calcula score de salud y score de confianza según cobertura real de scanners.
+- Permite políticas por usuario (con OAuth GitHub) o por admin key en modo invitado.
+- Expone endpoints para historial, estado, exportes y configuración de autenticación.
+
+## Limitaciones actuales (transparentes)
+
+- No reemplaza una auditoría de seguridad profesional de nivel enterprise.
+- Parte del motor sigue siendo heurístico y puede producir falsos positivos/negativos.
+- La profundidad de análisis depende de disponibilidad de herramientas OSS en runtime.
+- El escaneo está optimizado para velocidad/costo en entorno free-tier, no para cobertura total ilimitada.
 
 ## Deteccion actual
 
@@ -63,6 +85,13 @@ Si inicias sesión con GitHub, historial y políticas quedan aislados por usuari
 
 Scanners requeridos para cobertura minima de repo: `gitleaks`, `semgrep`, `osv-scanner`.
 Si faltan, el reporte marca cobertura incompleta y baja el score de confianza.
+
+## Casos de uso recomendados
+
+- Revisión inicial de riesgo en repositorios antes de refactor o onboarding técnico.
+- Chequeo rápido de secretos, patrones inseguros y riesgo de dependencias.
+- Generación de reportes compartibles para discusiones técnicas en equipo.
+- Base OSS para evolucionar un flujo DevSecOps propio.
 
 ## Instalacion
 
@@ -228,3 +257,10 @@ MIT. Ver [LICENSE](./LICENSE).
 
 - Guía de contribución: [CONTRIBUTING.md](./CONTRIBUTING.md)
 - Código de conducta: [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+
+## Roadmap
+
+- Mejorar precisión del scoring y trazabilidad de hallazgos por herramienta.
+- Reducir falsos positivos en detección heurística de licencias.
+- Ampliar cobertura de tests E2E para sesión OAuth y aislamiento multiusuario.
+- Fortalecer integración CI/CD para uso continuo en repositorios.
