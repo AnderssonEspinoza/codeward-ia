@@ -251,7 +251,7 @@ export default function App() {
             </div>
             <div className="leading-tight">
               <span className="block text-xl font-bold text-slate-100 tracking-tight">
-                CodeWard
+                CodeWard <span className="text-indigo-400">AI</span>
               </span>
               <span className="block text-[10px] uppercase tracking-[0.18em] text-slate-500">
                 OSS Security Auditor

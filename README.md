@@ -1,8 +1,8 @@
-# CodeWard
+# CodeWard AI
 
 **OSS Security Auditor**
 
-CodeWard es un auditor OSS de seguridad y compliance para repositorios y snippets, en etapa MVP.
+CodeWard AI es un auditor OSS de seguridad y compliance para repositorios y snippets, en etapa MVP.
 Su enfoque es entregar hallazgos accionables con evidencia trazable y una arquitectura backend real:
 API + worker BullMQ integrado + cola + PostgreSQL + Redis.
 
@@ -13,7 +13,7 @@ API + worker BullMQ integrado + cola + PostgreSQL + Redis.
 
 ### Video demo
 
-[![Ver demo de CodeWard](./public/image1.png)](./public/demo.mp4)
+[![Ver demo de CodeWard AI](./public/image1.png)](./public/demo.mp4)
 
 Haz click en la imagen para abrir el video: [public/demo.mp4](./public/demo.mp4)
 
@@ -21,11 +21,11 @@ Haz click en la imagen para abrir el video: [public/demo.mp4](./public/demo.mp4)
 
 **Inicio**
 
-![CodeWard - Inicio](./public/image1.png)
+![CodeWard AI - Inicio](./public/image1.png)
 
 **Resultado de auditoría**
 
-![CodeWard - Resultado](./public/image2.png)
+![CodeWard AI - Resultado](./public/image2.png)
 
 ## Propuesta de valor
 
