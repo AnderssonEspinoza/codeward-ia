@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,4 +13,135 @@ body,
 
 body {
   margin: 0;
+  background: #141416;
+  color: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+:root {
+  --bg-main: #141416;
+  --surface: #1e1e22;
+  --surface-hover: #26262b;
+  --text-main: #ffffff;
+  --text-muted: #8a8b94;
+  --text-dark: #111111;
+  --border-subtle: #2c2d35;
+  --pastel-yellow: #ffd272;
+  --pastel-purple: #b58bfa;
+  --pastel-green: #d4e09b;
+  --pastel-red: #ff8f8f;
+}
+
+.codeward-theme {
+  background:
+    radial-gradient(circle at 5% 5%, rgba(255, 210, 114, 0.08), transparent 30%),
+    radial-gradient(circle at 85% 0%, rgba(181, 139, 250, 0.08), transparent 26%),
+    var(--bg-main);
+}
+
+.codeward-theme .font-mono {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.codeward-theme .bg-slate-950 {
+  background-color: var(--bg-main) !important;
+}
+
+.codeward-theme .bg-slate-900,
+.codeward-theme .bg-slate-900\/50 {
+  background-color: var(--surface) !important;
+}
+
+.codeward-theme .bg-slate-800,
+.codeward-theme .bg-slate-800\/50 {
+  background-color: var(--surface-hover) !important;
+}
+
+.codeward-theme .text-slate-100,
+.codeward-theme .text-slate-200 {
+  color: var(--text-main) !important;
+}
+
+.codeward-theme .text-slate-300,
+.codeward-theme .text-slate-400,
+.codeward-theme .text-slate-500,
+.codeward-theme .text-slate-600 {
+  color: var(--text-muted) !important;
+}
+
+.codeward-theme .border-slate-800,
+.codeward-theme .border-slate-700 {
+  border-color: var(--border-subtle) !important;
+}
+
+.codeward-theme .text-indigo-400 {
+  color: var(--pastel-yellow) !important;
+}
+
+.codeward-theme .bg-indigo-600,
+.codeward-theme .bg-indigo-500 {
+  background-color: var(--pastel-yellow) !important;
+}
+
+.codeward-theme .bg-indigo-600:hover,
+.codeward-theme .bg-indigo-500:hover {
+  background-color: #ffc95d !important;
+}
+
+.codeward-theme .text-white {
+  color: var(--text-dark) !important;
+}
+
+.codeward-theme .border-indigo-500\/20 {
+  border-color: rgba(255, 210, 114, 0.35) !important;
+}
+
+.codeward-theme .bg-indigo-500\/10 {
+  background-color: rgba(255, 210, 114, 0.14) !important;
+}
+
+.codeward-theme .shadow-indigo-600\/20 {
+  box-shadow: 0 10px 24px rgba(255, 210, 114, 0.18) !important;
+}
+
+.codeward-theme .text-emerald-400,
+.codeward-theme .text-emerald-300 {
+  color: var(--pastel-green) !important;
+}
+
+.codeward-theme .text-rose-400,
+.codeward-theme .text-rose-300 {
+  color: var(--pastel-red) !important;
+}
+
+.codeward-theme .text-amber-400,
+.codeward-theme .text-amber-500,
+.codeward-theme .text-amber-300 {
+  color: var(--pastel-yellow) !important;
+}
+
+.codeward-theme .rounded-2xl,
+.codeward-theme .rounded-xl,
+.codeward-theme .rounded-lg {
+  border-radius: 16px !important;
+}
+
+.codeward-theme header {
+  background: rgba(20, 20, 22, 0.85) !important;
+  backdrop-filter: blur(14px);
+}
+
+.codeward-theme h1,
+.codeward-theme h2,
+.codeward-theme h3,
+.codeward-theme h4 {
+  letter-spacing: -0.02em;
+}
+
+.codeward-theme .hover\:bg-slate-700:hover,
+.codeward-theme .hover\:bg-slate-800\/50:hover,
+.codeward-theme .hover\:bg-slate-800\/20:hover,
+.codeward-theme .hover\:bg-slate-700:hover,
+.codeward-theme .hover\:bg-slate-700\/50:hover {
+  background-color: var(--surface-hover) !important;
 }
