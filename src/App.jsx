@@ -249,7 +249,14 @@ export default function App() {
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-slate-100 tracking-tight">CodeGuard <span className="text-indigo-400">AI</span></span>
+            <div className="leading-tight">
+              <span className="block text-xl font-bold text-slate-100 tracking-tight">
+                CodeWard
+              </span>
+              <span className="block text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                OSS Security Auditor
+              </span>
+            </div>
             {!user && <span className="ml-2 text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">Modo Invitado</span>}
           </div>
           
