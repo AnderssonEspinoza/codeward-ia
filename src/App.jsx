@@ -179,8 +179,11 @@ export default function App() {
       if (!scanId) throw new Error('El backend no devolvió scanId');
 
       let pollResult = null;
-      for (let attempt = 0; attempt < 40; attempt += 1) {
-        await wait(1000);
+      const maxAttempts = inputType === 'repo' ? 180 : 60;
+      const pollIntervalMs = inputType === 'repo' ? 1500 : 1000;
+
+      for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+        await wait(pollIntervalMs);
         const pollRes = await apiFetch(`${API_BASE}/api/scans/${scanId}`);
         if (!pollRes.ok) continue;
 
@@ -195,7 +198,11 @@ export default function App() {
         }
       }
 
-      if (!pollResult) throw new Error('Timeout: el escaneo demoró demasiado');
+      if (!pollResult) {
+        throw new Error(
+          'Timeout: el escaneo sigue en proceso. Revisa el historial en unos segundos para ver el resultado final.',
+        );
+      }
 
       setScanResults(pollResult);
 
