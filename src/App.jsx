@@ -421,12 +421,6 @@ function AnalyzingView() {
 function ResultsDashboard({ onReset, results, error, isAuth }) {
   const [activeTab, setActiveTab] = useState('security');
 
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-emerald-400';
-    if (score >= 60) return 'text-amber-400';
-    return 'text-rose-400';
-  };
-
   const getSeverityStyle = (severity) => {
     const config = {
       critical: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20', label: 'Crítico' },
@@ -507,19 +501,19 @@ function ResultsDashboard({ onReset, results, error, isAuth }) {
       <div className="cw-metrics-strip mb-8">
         <div className="cw-metric card-yellow">
           <p className="cw-metric-label">Puntuación de Salud</p>
-          <h2 className={`cw-metric-value ${getScoreColor(results?.healthScore || 0)}`}>
+          <h2 className="cw-metric-value cw-metric-value-dark">
             {results?.healthScore || 0}<span>/100</span>
           </h2>
           <p className="cw-metric-sub">Ajustado por cobertura y confianza del motor.</p>
         </div>
         <div className="cw-metric card-purple">
           <p className="cw-metric-label">Vulnerabilidades Detectadas</p>
-          <h2 className="cw-metric-value">{results?.vulnerabilities?.length || 0}</h2>
+          <h2 className="cw-metric-value cw-metric-value-dark">{results?.vulnerabilities?.length || 0}</h2>
           <p className="cw-metric-sub">Confirmadas + inferidas en este análisis.</p>
         </div>
         <div className="cw-metric card-green">
           <p className="cw-metric-label">Riesgo de Licencias</p>
-          <h2 className="cw-metric-value text-3xl">
+          <h2 className="cw-metric-value cw-metric-value-dark text-3xl">
             {results?.licenses?.[0]?.risk === 'high' ? 'Detectado' : 'Limpio'}
           </h2>
           <p className="cw-metric-sub">Estado legal estimado con reglas actuales.</p>
@@ -593,29 +587,29 @@ function GlobalDashboard({ onNewScan, history }) {
   const avgScore = history.length > 0 ? Math.round(history.reduce((acc, curr) => acc + curr.score, 0) / history.length) : 0;
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-end">
+    <div className="space-y-8 cw-page-block">
+      <div className="flex justify-between items-end cw-header-row">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100 tracking-tight">Dashboard de Seguridad</h1>
-          <p className="text-slate-400 mt-1">Historial de análisis y métricas persistentes.</p>
+          <h1 className="text-3xl font-bold text-slate-100 tracking-tight">Centro de Auditoría</h1>
+          <p className="text-slate-400 mt-1">Historial operativo y estado de seguridad por ejecución.</p>
         </div>
-        <button onClick={onNewScan} className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2">
+        <button onClick={onNewScan} className="cw-btn-new-lite">
           <Play className="w-4 h-4" /> Nuevo Escaneo
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex justify-between items-center">
+        <div className="cw-stat-card">
           <div><p className="text-sm text-slate-400">Escaneos Totales</p><h3 className="text-4xl font-black text-slate-100 mt-1">{history.length}</h3></div>
           <Activity className="w-10 h-10 text-blue-500/50" />
         </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex justify-between items-center">
+        <div className="cw-stat-card">
           <div><p className="text-sm text-slate-400">Score Promedio Histórico</p><h3 className="text-4xl font-black text-emerald-400 mt-1">{avgScore}/100</h3></div>
           <ShieldCheck className="w-10 h-10 text-emerald-500/50" />
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="cw-table-shell">
         <div className="px-6 py-4 border-b border-slate-800"><h3 className="font-semibold text-slate-200">Historial de Auditorías</h3></div>
         {history.length === 0 ? (
           <div className="p-10 text-center text-slate-500">No hay escaneos recientes. Comienza auditando algún código.</div>
@@ -666,10 +660,10 @@ function PoliciesView({ policies, setPolicies, isAuth }) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8 cw-page-block">
       <div>
-        <h1 className="text-3xl font-bold text-slate-100">Políticas de Empresa</h1>
-        <p className="text-slate-400 mt-1">Configura las reglas de auditoría (guardado en backend local).</p>
+        <h1 className="text-3xl font-bold text-slate-100">Políticas de Seguridad</h1>
+        <p className="text-slate-400 mt-1">Controla reglas activas del motor y su impacto en cumplimiento.</p>
       </div>
 
       {!isAuth && (
@@ -678,10 +672,10 @@ function PoliciesView({ policies, setPolicies, isAuth }) {
         </div>
       )}
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+      <div className="cw-table-shell overflow-hidden">
         <div className="divide-y divide-slate-800/50">
           {policies.map((policy) => (
-            <div key={policy.id} className="p-6 flex items-center justify-between gap-4">
+            <div key={policy.id} className="p-6 flex items-center justify-between gap-4 hover:bg-slate-800/30 transition-colors">
               <div>
                 <h3 className="text-base font-semibold text-slate-200">{policy.name}</h3>
                 <p className="text-sm text-slate-400 mt-1">{policy.desc}</p>
@@ -699,9 +693,9 @@ function PoliciesView({ policies, setPolicies, isAuth }) {
 
 function DocsView() {
   return (
-    <div className="max-w-3xl animate-in fade-in">
+    <div className="max-w-3xl animate-in fade-in cw-page-block">
       <h1 className="text-3xl font-bold text-slate-100 mb-6">Documentación & API</h1>
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-slate-300 space-y-4">
+      <div className="cw-table-shell p-6 text-slate-300 space-y-4">
         <p><strong>Arquitectura de este MVP:</strong></p>
         <ul className="list-disc pl-5 space-y-2 text-slate-400 text-sm">
           <li><strong>Frontend:</strong> React (Single Page Application).</li>

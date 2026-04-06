@@ -248,6 +248,10 @@ body {
   letter-spacing: -0.03em;
 }
 
+.cw-metric-value-dark {
+  color: #111111 !important;
+}
+
 .cw-metric-value span {
   font-size: 1.2rem;
   opacity: 0.65;
@@ -281,6 +285,53 @@ body {
 .cw-tab.active {
   background: var(--pastel-yellow);
   color: var(--text-dark);
+}
+
+.cw-page-block {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0));
+  border: 1px solid var(--border-subtle);
+  border-radius: 22px;
+  padding: 1.25rem;
+}
+
+.cw-header-row {
+  border-bottom: 1px dashed var(--border-subtle);
+  padding-bottom: 1rem;
+}
+
+.cw-btn-new-lite {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 210, 114, 0.4);
+  border-radius: 999px;
+  color: var(--pastel-yellow);
+  background: rgba(255, 210, 114, 0.08);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.cw-btn-new-lite:hover {
+  background: rgba(255, 210, 114, 0.16);
+}
+
+.cw-stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cw-table-shell {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
 }
 
 @media (max-width: 920px) {
