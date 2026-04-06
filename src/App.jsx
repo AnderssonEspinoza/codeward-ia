@@ -432,6 +432,8 @@ function ResultsDashboard({ onReset, results, error, isAuth }) {
   };
 
   const allVulnerabilities = results?.vulnerabilities || [];
+  const directCount = allVulnerabilities.filter((v) => v?.evidenceType === 'direct').length;
+  const heuristicCount = allVulnerabilities.filter((v) => v?.evidenceType === 'heuristic').length;
   const confirmedVulnerabilities = allVulnerabilities.filter(
     (v) => v?.evidenceType !== 'inferred'
   );
@@ -505,11 +507,13 @@ function ResultsDashboard({ onReset, results, error, isAuth }) {
             {results?.healthScore || 0}<span>/100</span>
           </h2>
           <p className="cw-metric-sub">Ajustado por cobertura y confianza del motor.</p>
+          <div className="cw-metric-icon"><ShieldCheck className="w-5 h-5" /></div>
         </div>
         <div className="cw-metric card-purple">
           <p className="cw-metric-label">Vulnerabilidades Detectadas</p>
           <h2 className="cw-metric-value cw-metric-value-dark">{results?.vulnerabilities?.length || 0}</h2>
           <p className="cw-metric-sub">Confirmadas + inferidas en este análisis.</p>
+          <div className="cw-metric-icon"><AlertTriangle className="w-5 h-5" /></div>
         </div>
         <div className="cw-metric card-green">
           <p className="cw-metric-label">Riesgo de Licencias</p>
@@ -517,6 +521,7 @@ function ResultsDashboard({ onReset, results, error, isAuth }) {
             {results?.licenses?.[0]?.risk === 'high' ? 'Detectado' : 'Limpio'}
           </h2>
           <p className="cw-metric-sub">Estado legal estimado con reglas actuales.</p>
+          <div className="cw-metric-icon"><Scale className="w-5 h-5" /></div>
         </div>
       </div>
 
@@ -528,55 +533,75 @@ function ResultsDashboard({ onReset, results, error, isAuth }) {
           </button>
         </div>
 
-        <div className="p-6 md:p-8 bg-slate-900/50">
-          {activeTab === 'overview' && (
-            <div>
-              <h3 className="text-lg font-semibold text-slate-200 mb-4">Análisis Arquitectónico</h3>
-              <p className="text-slate-300 leading-relaxed bg-slate-950 p-6 rounded-xl border border-slate-800">{results?.explanation}</p>
+        <div className="p-6 md:p-8 bg-slate-900/50 cw-results-grid">
+          <aside className="cw-results-aside">
+            <div className="cw-aside-card">
+              <p className="cw-aside-label">Señales del Motor</p>
+              <div className="cw-aside-row"><span>Directas</span><strong>{directCount}</strong></div>
+              <div className="cw-aside-row"><span>Heurísticas</span><strong>{heuristicCount}</strong></div>
+              <div className="cw-aside-row"><span>Inferidas</span><strong>{inferredVulnerabilities.length}</strong></div>
             </div>
-          )}
-          
-          {activeTab === 'security' && (
-            <div className="space-y-4">
-              {allVulnerabilities.length === 0 ? (
-                <div className="text-center p-10 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
-                  <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
-                  <h3 className="text-emerald-300 font-bold">¡Excelente código!</h3>
-                  <p className="text-emerald-400/70 text-sm">La IA no detectó vulnerabilidades críticas en este fragmento.</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <section className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold uppercase tracking-wide text-emerald-300">Hallazgos Confirmados</h3>
-                      <span className="text-xs px-2 py-1 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">{confirmedVulnerabilities.length}</span>
-                    </div>
-                    {confirmedVulnerabilities.length === 0 ? (
-                      <div className="text-sm text-slate-400 bg-slate-950 border border-slate-800 rounded-lg p-4">
-                        No se detectaron hallazgos confirmados por reglas directas sobre el código.
-                      </div>
-                    ) : (
-                      confirmedVulnerabilities.map((vuln, i) => renderVulnerabilityCard(vuln, i))
-                    )}
-                  </section>
+            <div className="cw-aside-card">
+              <p className="cw-aside-label">Cobertura OSS</p>
+              <p className="cw-aside-note">
+                Requeridos: {(results?.meta?.requiredScanners || []).join(', ') || 'N/A'}
+              </p>
+              <p className="cw-aside-note">
+                Faltantes: {(results?.meta?.missingRequiredTools || []).join(', ') || 'ninguno'}
+              </p>
+            </div>
+          </aside>
 
-                  <section className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300">Hallazgos Inferidos</h3>
-                      <span className="text-xs px-2 py-1 rounded border border-slate-700 bg-slate-800 text-slate-300">{inferredVulnerabilities.length}</span>
-                    </div>
-                    {inferredVulnerabilities.length === 0 ? (
-                      <div className="text-sm text-slate-400 bg-slate-950 border border-slate-800 rounded-lg p-4">
-                        No se inferieron riesgos arquitectónicos adicionales.
+          <section className="cw-results-main">
+            {activeTab === 'overview' && (
+              <div>
+                <h3 className="text-lg font-semibold text-slate-200 mb-4">Análisis Arquitectónico</h3>
+                <p className="text-slate-300 leading-relaxed bg-slate-950 p-6 rounded-xl border border-slate-800">{results?.explanation}</p>
+              </div>
+            )}
+
+            {activeTab === 'security' && (
+              <div className="space-y-4">
+                {allVulnerabilities.length === 0 ? (
+                  <div className="text-center p-10 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                    <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
+                    <h3 className="text-emerald-300 font-bold">¡Excelente código!</h3>
+                    <p className="text-emerald-400/70 text-sm">La IA no detectó vulnerabilidades críticas en este fragmento.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <section className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-emerald-300">Hallazgos Confirmados</h3>
+                        <span className="text-xs px-2 py-1 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">{confirmedVulnerabilities.length}</span>
                       </div>
-                    ) : (
-                      inferredVulnerabilities.map((vuln, i) => renderVulnerabilityCard(vuln, i + 1000))
-                    )}
-                  </section>
-                </div>
-              )}
-            </div>
-          )}
+                      {confirmedVulnerabilities.length === 0 ? (
+                        <div className="text-sm text-slate-400 bg-slate-950 border border-slate-800 rounded-lg p-4">
+                          No se detectaron hallazgos confirmados por reglas directas sobre el código.
+                        </div>
+                      ) : (
+                        confirmedVulnerabilities.map((vuln, i) => renderVulnerabilityCard(vuln, i))
+                      )}
+                    </section>
+
+                    <section className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300">Hallazgos Inferidos</h3>
+                        <span className="text-xs px-2 py-1 rounded border border-slate-700 bg-slate-800 text-slate-300">{inferredVulnerabilities.length}</span>
+                      </div>
+                      {inferredVulnerabilities.length === 0 ? (
+                        <div className="text-sm text-slate-400 bg-slate-950 border border-slate-800 rounded-lg p-4">
+                          No se inferieron riesgos arquitectónicos adicionales.
+                        </div>
+                      ) : (
+                        inferredVulnerabilities.map((vuln, i) => renderVulnerabilityCard(vuln, i + 1000))
+                      )}
+                    </section>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </div>
