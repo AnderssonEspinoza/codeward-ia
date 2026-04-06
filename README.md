@@ -8,13 +8,11 @@ API + worker BullMQ integrado + cola + PostgreSQL + Redis.
 - App en vivo: https://codeward-ia.vercel.app
 - API (Render Docker): https://codeward-api-docker.onrender.com
 
-![CodeWard IA Demo](https://image.thum.io/get/width/1400/https://codeward-ia.vercel.app)
-
 ### Video demo
 
-<video src="./public/demo.mp4" controls width="100%"></video>
+[![Ver demo de CodeWard IA](./public/image1.png)](./public/demo.mp4)
 
-Si GitHub no muestra el video en tu vista, descárgalo desde: [public/demo.mp4](./public/demo.mp4)
+Haz click en la imagen para abrir el video: [public/demo.mp4](./public/demo.mp4)
 
 ### Capturas
 
