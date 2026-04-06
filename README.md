@@ -10,6 +10,22 @@ API + worker BullMQ integrado + cola + PostgreSQL + Redis.
 
 ![CodeWard IA Demo](https://image.thum.io/get/width/1400/https://codeward-ia.vercel.app)
 
+### Video demo
+
+<video src="./public/demo.mp4" controls width="100%"></video>
+
+Si GitHub no muestra el video en tu vista, descárgalo desde: [public/demo.mp4](./public/demo.mp4)
+
+### Capturas
+
+**Inicio**
+
+![CodeWard IA - Inicio](./public/image1.png)
+
+**Resultado de auditoría**
+
+![CodeWard IA - Resultado](./public/image2.png)
+
 ## Stack
 
 - Frontend: React + Vite + Tailwind
@@ -214,4 +230,3 @@ MIT. Ver [LICENSE](./LICENSE).
 
 - Guía de contribución: [CONTRIBUTING.md](./CONTRIBUTING.md)
 - Código de conducta: [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
-- Seed de issues iniciales: [.github/GOOD_FIRST_ISSUES.md](./.github/GOOD_FIRST_ISSUES.md)
