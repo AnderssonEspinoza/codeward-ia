@@ -1,7 +1,14 @@
-# CodeGuard AI
+# CodeWard IA
 
 Asistente de code review orientado a seguridad y compliance, con arquitectura real:
 API + worker BullMQ integrado + cola + PostgreSQL + Redis.
+
+## Demo
+
+- App en vivo: https://codeward-ia.vercel.app
+- API (Render Docker): https://codeward-api-docker.onrender.com
+
+![CodeWard IA Demo](https://image.thum.io/get/width/1400/https://codeward-ia.vercel.app)
 
 ## Stack
 
