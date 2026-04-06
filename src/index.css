@@ -145,3 +145,151 @@ body {
 .codeward-theme .hover\:bg-slate-700\/50:hover {
   background-color: var(--surface-hover) !important;
 }
+
+.cw-results .cw-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.cw-report-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.7rem;
+}
+
+.cw-report-title {
+  font-size: clamp(1.8rem, 2.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.cw-report-title span {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.cw-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(212, 224, 155, 0.14);
+  color: #d4e09b;
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+.cw-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.cw-btn-new {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 999px;
+  background: var(--pastel-yellow);
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.cw-btn-new:hover {
+  filter: brightness(1.04);
+}
+
+.cw-metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.cw-metric {
+  border-radius: 20px;
+  padding: 1.25rem;
+  min-height: 164px;
+}
+
+.cw-metric.card-yellow {
+  background: var(--pastel-yellow);
+  color: var(--text-dark);
+}
+
+.cw-metric.card-purple {
+  background: var(--pastel-purple);
+  color: var(--text-dark);
+}
+
+.cw-metric.card-green {
+  background: var(--pastel-green);
+  color: var(--text-dark);
+}
+
+.cw-metric-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  opacity: 0.8;
+  margin-bottom: 0.8rem;
+}
+
+.cw-metric-value {
+  font-size: clamp(2rem, 3vw, 3.1rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.cw-metric-value span {
+  font-size: 1.2rem;
+  opacity: 0.65;
+  margin-left: 4px;
+}
+
+.cw-metric-sub {
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.cw-tabs {
+  display: flex;
+  gap: 0.7rem;
+  padding: 1rem 1rem 0.2rem;
+}
+
+.cw-tab {
+  border: none;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.cw-tab.active {
+  background: var(--pastel-yellow);
+  color: var(--text-dark);
+}
+
+@media (max-width: 920px) {
+  .cw-results .cw-report-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cw-metrics-strip {
+    grid-template-columns: 1fr;
+  }
+}

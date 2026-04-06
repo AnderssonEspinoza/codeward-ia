@@ -471,60 +471,67 @@ function ResultsDashboard({ onReset, results, error, isAuth }) {
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 cw-results">
+      <div className="cw-report-header mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100 flex items-center gap-3">
-            Reporte Generado por IA
-            <span className="px-2 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded text-sm font-medium">Completado</span>
-          </h1>
-          {error && <p className="text-amber-400 text-sm mt-2">{error}</p>}
           {results?.meta?.engine && (
-            <p className="text-slate-400 text-sm mt-2">
-              Motor: {results.meta.engine}
+            <p className="cw-report-meta">
+              [ENGINE] {results.meta.engine}
               {typeof results?.meta?.scannedFiles === 'number'
-                ? ` · Archivos analizados: ${results.meta.scannedFiles}`
+                ? ` · [FILES] ${results.meta.scannedFiles}`
                 : ''}
             </p>
           )}
+          <h1 className="cw-report-title">
+            Auditoría <span>// IA</span>
+          </h1>
           {results?.meta?.scoreBreakdown && (
-            <p className="text-slate-500 text-xs mt-1">
+            <p className="text-slate-500 text-xs mt-2">
               Confianza: {Math.round((results.meta.scoreBreakdown.confidence || 0) * 100)}% · Cobertura herramientas:{' '}
               {Math.round((results.meta.scoreBreakdown.toolCoverageRatio || 0) * 100)}%
             </p>
           )}
-          {!isAuth && <p className="text-amber-500 text-sm mt-1">⚠️ Este reporte es de una sesión local de demostración.</p>}
+          {error && <p className="text-amber-400 text-sm mt-2">{error}</p>}
+          {!isAuth && <p className="text-amber-500 text-sm mt-2">⚠️ Modo demostración local activo.</p>}
         </div>
-        <button onClick={onReset} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-sm font-medium text-slate-200 transition-colors flex items-center gap-2">
-          <RefreshCw className="w-4 h-4" /> Nuevo Análisis
-        </button>
-      </div>
-
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <p className="text-sm font-medium text-slate-400">Puntuación de Salud</p>
-          <h2 className={`text-5xl font-black mt-2 tracking-tighter ${getScoreColor(results?.healthScore || 0)}`}>
-            {results?.healthScore || 0}<span className="text-2xl text-slate-600 font-bold">/100</span>
-          </h2>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <p className="text-sm font-medium text-slate-400">Vulnerabilidades Detectadas</p>
-          <h2 className="text-4xl font-black mt-2 text-rose-400">{results?.vulnerabilities?.length || 0}</h2>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <p className="text-sm font-medium text-slate-400">Riesgo de Licencias</p>
-          <h2 className="text-3xl font-bold mt-2 text-slate-200">
-            {results?.licenses?.[0]?.risk === 'high' ? <span className="text-amber-400">Detectado</span> : <span className="text-emerald-400">Limpio</span>}
-          </h2>
+        <div className="flex flex-col items-end gap-3">
+          <span className="cw-status-pill">
+            <span className="cw-status-dot" /> Completado
+          </span>
+          <button onClick={onReset} className="cw-btn-new">
+            Nuevo Análisis
+          </button>
         </div>
       </div>
 
-      {/* TABS CONTENIDO */}
+      <div className="cw-metrics-strip mb-8">
+        <div className="cw-metric card-yellow">
+          <p className="cw-metric-label">Puntuación de Salud</p>
+          <h2 className={`cw-metric-value ${getScoreColor(results?.healthScore || 0)}`}>
+            {results?.healthScore || 0}<span>/100</span>
+          </h2>
+          <p className="cw-metric-sub">Ajustado por cobertura y confianza del motor.</p>
+        </div>
+        <div className="cw-metric card-purple">
+          <p className="cw-metric-label">Vulnerabilidades Detectadas</p>
+          <h2 className="cw-metric-value">{results?.vulnerabilities?.length || 0}</h2>
+          <p className="cw-metric-sub">Confirmadas + inferidas en este análisis.</p>
+        </div>
+        <div className="cw-metric card-green">
+          <p className="cw-metric-label">Riesgo de Licencias</p>
+          <h2 className="cw-metric-value text-3xl">
+            {results?.licenses?.[0]?.risk === 'high' ? 'Detectado' : 'Limpio'}
+          </h2>
+          <p className="cw-metric-sub">Estado legal estimado con reglas actuales.</p>
+        </div>
+      </div>
+
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div className="flex border-b border-slate-800">
-          <button onClick={() => setActiveTab('overview')} className={`px-6 py-4 flex gap-2 text-sm font-semibold ${activeTab === 'overview' ? 'text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50' : 'text-slate-400'}`}>Resumen de IA</button>
-          <button onClick={() => setActiveTab('security')} className={`px-6 py-4 flex gap-2 text-sm font-semibold ${activeTab === 'security' ? 'text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50' : 'text-slate-400'}`}>Vulnerabilidades ({allVulnerabilities.length})</button>
+        <div className="cw-tabs">
+          <button onClick={() => setActiveTab('overview')} className={`cw-tab ${activeTab === 'overview' ? 'active' : ''}`}>Resumen IA</button>
+          <button onClick={() => setActiveTab('security')} className={`cw-tab ${activeTab === 'security' ? 'active' : ''}`}>
+            Hallazgos ({allVulnerabilities.length})
+          </button>
         </div>
 
         <div className="p-6 md:p-8 bg-slate-900/50">
