@@ -209,3 +209,9 @@ Valida flujo real: `health` -> crear scan -> polling -> export markdown.
 ## Licencia
 
 MIT. Ver [LICENSE](./LICENSE).
+
+## Comunidad
+
+- Guía de contribución: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Código de conducta: [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+- Seed de issues iniciales: [.github/GOOD_FIRST_ISSUES.md](./.github/GOOD_FIRST_ISSUES.md)
