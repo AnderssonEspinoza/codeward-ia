@@ -285,6 +285,8 @@ body {
   display: flex;
   gap: 0.7rem;
   padding: 1rem 1rem 0.2rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .cw-tab {
@@ -296,6 +298,8 @@ body {
   background: var(--surface-hover);
   color: var(--text-muted);
   cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .cw-tab.active {
@@ -420,5 +424,46 @@ body {
 
   .cw-results-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .cw-page-block {
+    padding: 0.9rem;
+    border-radius: 18px;
+  }
+
+  .cw-report-meta {
+    font-size: 0.67rem;
+    line-height: 1.5;
+  }
+
+  .cw-report-title {
+    font-size: 1.7rem;
+  }
+
+  .cw-metric {
+    min-height: 150px;
+    padding: 1rem;
+  }
+
+  .cw-metric-label {
+    font-size: 0.82rem;
+  }
+
+  .cw-metric-sub {
+    font-size: 0.73rem;
+  }
+
+  .cw-metric-icon {
+    width: 30px;
+    height: 30px;
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .cw-btn-new {
+    width: 100%;
+    justify-content: center;
   }
 }

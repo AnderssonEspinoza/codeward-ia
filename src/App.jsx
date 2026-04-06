@@ -244,20 +244,20 @@ export default function App() {
     <div className="codeward-theme min-h-screen bg-slate-950 text-slate-300 font-sans selection:bg-indigo-500/30">
       {/* HEADER NAVBAR */}
       <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => user ? setCurrentView('dashboard') : setCurrentView('scanner')}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 min-h-16 py-2 flex items-center justify-between gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer min-w-0" onClick={() => user ? setCurrentView('dashboard') : setCurrentView('scanner')}>
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
-            <div className="leading-tight">
-              <span className="block text-xl font-bold text-slate-100 tracking-tight">
+            <div className="leading-tight min-w-0">
+              <span className="block text-base sm:text-xl font-bold text-slate-100 tracking-tight truncate">
                 CodeWard <span className="text-indigo-400">AI</span>
               </span>
-              <span className="block text-[10px] uppercase tracking-[0.18em] text-slate-500">
+              <span className="hidden sm:block text-[10px] uppercase tracking-[0.18em] text-slate-500">
                 OSS Security Auditor
               </span>
             </div>
-            {!user && <span className="ml-2 text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">Modo Invitado</span>}
+            {!user && <span className="hidden lg:inline-flex ml-2 text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">Modo Invitado</span>}
           </div>
           
           <nav className="hidden md:flex gap-1 bg-slate-800/50 p-1 rounded-lg border border-slate-800">
@@ -267,7 +267,7 @@ export default function App() {
             <NavButton active={currentView === 'docs'} onClick={() => setCurrentView('docs')} icon={<BookOpen className="w-4 h-4" />} label="Docs & API" />
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             {user ? (
               <>
                 <button onClick={() => { resetApp(); setCurrentView('scanner'); }} className="hidden md:flex items-center gap-2 text-sm font-medium bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border border-indigo-500/20 px-3 py-1.5 rounded-md transition-colors">
@@ -278,8 +278,10 @@ export default function App() {
                 </div>
               </>
             ) : (
-              <button onClick={handleLogin} className="flex items-center gap-2 text-sm font-semibold bg-white text-slate-900 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors">
-                <FaGithub className="w-4 h-4" /> Iniciar Sesión GitHub
+              <button onClick={handleLogin} className="flex items-center gap-2 text-xs sm:text-sm font-semibold bg-white text-slate-900 px-2.5 sm:px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors whitespace-nowrap">
+                <FaGithub className="w-4 h-4" />
+                <span className="sm:hidden">GitHub</span>
+                <span className="hidden sm:inline">Iniciar Sesión GitHub</span>
               </button>
             )}
           </div>
@@ -287,7 +289,7 @@ export default function App() {
       </header>
 
       {/* MAIN CONTENT AREA */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-5 sm:py-8">
         {currentView === 'dashboard' && <GlobalDashboard onNewScan={() => { resetApp(); setCurrentView('scanner'); }} history={scanHistory} />}
         {currentView === 'policies' && <PoliciesView policies={policies} setPolicies={setPolicies} isAuth={!!user} />}
         {currentView === 'docs' && <DocsView />}
@@ -326,33 +328,33 @@ function NavButton({ active, onClick, icon, label }) {
 
 function InputView({ inputType, setInputType, inputValue, setInputValue, onAnalyze, isAuth }) {
   return (
-    <div className="max-w-3xl mx-auto mt-12">
+    <div className="max-w-3xl mx-auto mt-6 sm:mt-10 md:mt-12">
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-extrabold text-slate-100 mb-4 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-100 mb-4 tracking-tight">
           Code Review Assistant (OSS)
         </h1>
-        <p className="text-lg text-slate-400">
+        <p className="text-sm sm:text-base md:text-lg text-slate-400 px-1 sm:px-0">
           Pega un fragmento de código o un enlace de GitHub. El motor local analiza seguridad, riesgos y cumplimiento sin APIs pagas.
         </p>
       </div>
 
       <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden relative">
         <div className="flex border-b border-slate-800 bg-slate-900/50">
-          <button onClick={() => setInputType('snippet')} className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all ${inputType === 'snippet' ? 'text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'}`}>
+          <button onClick={() => setInputType('snippet')} className={`flex-1 py-3.5 sm:py-4 flex items-center justify-center gap-2 text-xs sm:text-sm font-medium transition-all ${inputType === 'snippet' ? 'text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'}`}>
             <Code className="w-4 h-4" /> Fragmento de Código
           </button>
-          <button onClick={() => setInputType('repo')} className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all ${inputType === 'repo' ? 'text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'}`}>
+          <button onClick={() => setInputType('repo')} className={`flex-1 py-3.5 sm:py-4 flex items-center justify-center gap-2 text-xs sm:text-sm font-medium transition-all ${inputType === 'repo' ? 'text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'}`}>
             <FaGithub className="w-4 h-4" /> Repositorio GitHub
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {inputType === 'snippet' ? (
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Ejemplo: function login(user, pass) { db.query('SELECT * FROM users WHERE u=' + user + ' AND p=' + pass) }"
-              className="w-full h-48 bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm font-mono text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all resize-none"
+              className="w-full h-40 sm:h-48 bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm font-mono text-slate-300 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all resize-none"
             />
           ) : (
             <div className="relative">
@@ -366,7 +368,7 @@ function InputView({ inputType, setInputType, inputValue, setInputValue, onAnaly
             </div>
           )}
 
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-xs text-slate-500 flex items-center gap-1.5">
               {!isAuth ? (
                 <span className="text-amber-500 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5"/> Modo invitado: inicia sesión con GitHub para historial y políticas por usuario.</span>
@@ -377,7 +379,7 @@ function InputView({ inputType, setInputType, inputValue, setInputValue, onAnaly
             <button
               onClick={onAnalyze}
               disabled={!inputValue.trim()}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto justify-center bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Auditar con IA <ChevronRight className="w-4 h-4" />
             </button>
@@ -390,9 +392,9 @@ function InputView({ inputType, setInputType, inputValue, setInputValue, onAnaly
 
 function ScanErrorView({ errorMsg, errorDetail, onRetry, onUseDemo }) {
   return (
-    <div className="max-w-3xl mx-auto mt-12">
-      <div className="bg-slate-900 border border-rose-500/30 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-rose-300 mb-3">Escaneo real no completado</h2>
+    <div className="max-w-3xl mx-auto mt-8 sm:mt-12">
+      <div className="bg-slate-900 border border-rose-500/30 rounded-2xl p-5 sm:p-8">
+        <h2 className="text-xl sm:text-2xl font-bold text-rose-300 mb-3">Escaneo real no completado</h2>
         <p className="text-slate-300">{errorMsg}</p>
         {errorDetail && (
           <p className="text-sm text-slate-400 mt-2">Detalle técnico: {errorDetail}</p>
@@ -412,14 +414,14 @@ function ScanErrorView({ errorMsg, errorDetail, onRetry, onUseDemo }) {
 
 function AnalyzingView() {
   return (
-    <div className="max-w-xl mx-auto mt-20 flex flex-col items-center justify-center">
+    <div className="max-w-xl mx-auto mt-12 sm:mt-20 px-3 sm:px-0 flex flex-col items-center justify-center text-center">
       <div className="relative mb-8">
         <div className="w-20 h-20 border-4 border-slate-800 border-t-indigo-500 rounded-full animate-spin"></div>
         <div className="absolute inset-0 flex items-center justify-center">
           <Activity className="w-8 h-8 text-indigo-400 animate-pulse" />
         </div>
       </div>
-      <h2 className="text-2xl font-bold text-slate-100 mb-2">Conectando con motor de analisis local...</h2>
+      <h2 className="text-xl sm:text-2xl font-bold text-slate-100 mb-2">Conectando con motor de analisis local...</h2>
       <p className="text-slate-400 text-sm">Ejecutando heurísticas de seguridad y análisis estático.</p>
     </div>
   );
@@ -453,8 +455,8 @@ function ResultsDashboard({ onReset, results, error, isAuth }) {
     const isInferred = vuln?.evidenceType === 'inferred';
 
     return (
-      <div key={`${vuln.id || 'VULN'}-${i}`} className="bg-slate-950 border border-slate-800 rounded-xl p-5">
-        <div className="flex justify-between items-start mb-3">
+      <div key={`${vuln.id || 'VULN'}-${i}`} className="bg-slate-950 border border-slate-800 rounded-xl p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
           <div className="flex items-center gap-3 flex-wrap">
             <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${style.bg} ${style.text} ${style.border} uppercase`}>{style.label}</span>
             <span className={`px-2 py-1 text-[11px] font-semibold rounded border ${isInferred ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'} uppercase`}>
@@ -462,7 +464,7 @@ function ResultsDashboard({ onReset, results, error, isAuth }) {
             </span>
             <h4 className="text-base font-semibold text-slate-200">{vuln.title}</h4>
           </div>
-          <span className="text-sm font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded">Línea {vuln.line}</span>
+          <span className="self-start text-xs sm:text-sm font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded">Línea {vuln.line}</span>
         </div>
         <p className="text-sm text-slate-400 mb-4">{vuln.description}</p>
         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
@@ -620,9 +622,9 @@ function GlobalDashboard({ onNewScan, history }) {
 
   return (
     <div className="space-y-8 cw-page-block">
-      <div className="flex justify-between items-end cw-header-row">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 cw-header-row">
         <div>
-          <h1 className="text-3xl font-bold text-slate-100 tracking-tight">Centro de Auditoría</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-100 tracking-tight">Centro de Auditoría</h1>
           <p className="text-slate-400 mt-1">Historial operativo y estado de seguridad por ejecución.</p>
         </div>
         <button onClick={onNewScan} className="cw-btn-new-lite">
@@ -642,24 +644,26 @@ function GlobalDashboard({ onNewScan, history }) {
       </div>
 
       <div className="cw-table-shell">
-        <div className="px-6 py-4 border-b border-slate-800"><h3 className="font-semibold text-slate-200">Historial de Auditorías</h3></div>
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-800"><h3 className="font-semibold text-slate-200">Historial de Auditorías</h3></div>
         {history.length === 0 ? (
           <div className="p-10 text-center text-slate-500">No hay escaneos recientes. Comienza auditando algún código.</div>
         ) : (
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-slate-400 uppercase bg-slate-950/50 border-b border-slate-800">
-              <tr><th className="px-6 py-3">ID</th><th className="px-6 py-3">Fecha</th><th className="px-6 py-3">Puntuación</th></tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/50">
-              {history.map((item, i) => (
-                <tr key={i} className="hover:bg-slate-800/20">
-                  <td className="px-6 py-4 font-mono text-slate-300">{item.id}</td>
-                  <td className="px-6 py-4 text-slate-400">{item.date}</td>
-                  <td className="px-6 py-4 font-bold text-emerald-400">{item.score}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-sm text-left">
+              <thead className="text-xs text-slate-400 uppercase bg-slate-950/50 border-b border-slate-800">
+                <tr><th className="px-4 sm:px-6 py-3">ID</th><th className="px-4 sm:px-6 py-3">Fecha</th><th className="px-4 sm:px-6 py-3">Puntuación</th></tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {history.map((item, i) => (
+                  <tr key={i} className="hover:bg-slate-800/20">
+                    <td className="px-4 sm:px-6 py-4 font-mono text-slate-300">{item.id}</td>
+                    <td className="px-4 sm:px-6 py-4 text-slate-400">{item.date}</td>
+                    <td className="px-4 sm:px-6 py-4 font-bold text-emerald-400">{item.score}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
@@ -694,7 +698,7 @@ function PoliciesView({ policies, setPolicies, isAuth }) {
   return (
     <div className="max-w-4xl mx-auto space-y-8 cw-page-block">
       <div>
-        <h1 className="text-3xl font-bold text-slate-100">Políticas de Seguridad</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-100">Políticas de Seguridad</h1>
         <p className="text-slate-400 mt-1">Controla reglas activas del motor y su impacto en cumplimiento.</p>
       </div>
 
@@ -707,12 +711,12 @@ function PoliciesView({ policies, setPolicies, isAuth }) {
       <div className="cw-table-shell overflow-hidden">
         <div className="divide-y divide-slate-800/50">
           {policies.map((policy) => (
-            <div key={policy.id} className="p-6 flex items-center justify-between gap-4 hover:bg-slate-800/30 transition-colors">
+            <div key={policy.id} className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-slate-800/30 transition-colors">
               <div>
                 <h3 className="text-base font-semibold text-slate-200">{policy.name}</h3>
                 <p className="text-sm text-slate-400 mt-1">{policy.desc}</p>
               </div>
-              <button onClick={() => togglePolicy(policy.id)} className={`focus:outline-none ${!isAuth && 'opacity-50 cursor-not-allowed'}`}>
+              <button onClick={() => togglePolicy(policy.id)} className={`focus:outline-none self-end sm:self-auto ${!isAuth && 'opacity-50 cursor-not-allowed'}`}>
                 {policy.active ? <ToggleRight className="w-10 h-10 text-indigo-500" /> : <ToggleLeft className="w-10 h-10 text-slate-600" />}
               </button>
             </div>
@@ -726,7 +730,7 @@ function PoliciesView({ policies, setPolicies, isAuth }) {
 function DocsView() {
   return (
     <div className="max-w-3xl animate-in fade-in cw-page-block">
-      <h1 className="text-3xl font-bold text-slate-100 mb-6">Documentación & API</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-slate-100 mb-6">Documentación & API</h1>
       <div className="cw-table-shell p-6 text-slate-300 space-y-4">
         <p><strong>Arquitectura de este MVP:</strong></p>
         <ul className="list-disc pl-5 space-y-2 text-slate-400 text-sm">
