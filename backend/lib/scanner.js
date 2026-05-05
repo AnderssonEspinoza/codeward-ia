@@ -79,6 +79,8 @@ const LICENSE_PATTERNS = [
 
 const MAX_REPO_FILES = 25
 const MAX_FILE_BYTES = 120_000
+const ANALYZER_VERSION = '0.2.0'
+const RULES_UPDATED_AT = '2026-05-04'
 const DEFAULT_REQUIRED_SCANNERS = ['gitleaks', 'semgrep', 'osv-scanner']
 const ALLOWED_CODE_EXTENSIONS = new Set([
   '.js',
@@ -152,6 +154,112 @@ function scorePenalty(vulnerability) {
   return base
 }
 
+function buildFixedSnippet(finding) {
+  const id = String(finding?.id || '').toUpperCase()
+  const title = String(finding?.title || '').toLowerCase()
+
+  if (id.includes('VULN-001') || title.includes('sql')) {
+    return [
+      '# Python / DB-API',
+      'cursor.execute(',
+      '    "SELECT * FROM users WHERE username = %s AND password_hash = %s",',
+      '    (username, password_hash),',
+      ')',
+    ].join('\n')
+  }
+
+  if (id.includes('VULN-002') || title.includes('secreto') || title.includes('secret')) {
+    return [
+      'const token = process.env.API_TOKEN',
+      '',
+      "if (!token) {",
+      "  throw new Error('API_TOKEN is required')",
+      '}',
+    ].join('\n')
+  }
+
+  if (id.includes('VULN-003') || title.includes('eval')) {
+    return [
+      'const allowedOperations = {',
+      '  sum: (a, b) => a + b,',
+      '  multiply: (a, b) => a * b,',
+      '}',
+      '',
+      'const handler = allowedOperations[operation]',
+      "if (!handler) throw new Error('Operation not allowed')",
+      'const result = handler(a, b)',
+    ].join('\n')
+  }
+
+  if (id.includes('VULN-004') || title.includes('comando') || title.includes('command')) {
+    return [
+      "const allowedCommands = new Set(['status', 'version'])",
+      '',
+      'if (!allowedCommands.has(command)) {',
+      "  throw new Error('Command not allowed')",
+      '}',
+    ].join('\n')
+  }
+
+  if (id.includes('VULN-005') || title.includes('hash')) {
+    return [
+      "import bcrypt from 'bcrypt'",
+      '',
+      'const passwordHash = await bcrypt.hash(password, 12)',
+      'const isValid = await bcrypt.compare(password, passwordHash)',
+    ].join('\n')
+  }
+
+  if (id.startsWith('COVERAGE-')) {
+    const tool = id.replace('COVERAGE-', '').toLowerCase()
+    return [
+      '# Runtime setup',
+      `# Instala ${tool} en el entorno donde corre el worker de CodeWard.`,
+      `REQUIRED_SCANNERS=${tool}`,
+    ].join('\n')
+  }
+
+  if (title.includes('idor') || id.includes('INF-002')) {
+    return [
+      '// Ejemplo de aislamiento por tenant/sucursal',
+      'const record = await db.record.findFirst({',
+      '  where: { id: recordId, branchId: currentUser.branchId },',
+      '})',
+    ].join('\n')
+  }
+
+  if (title.includes('webhook') || id.includes('INF-003')) {
+    return [
+      'const expected = signPayload(rawBody, process.env.WEBHOOK_SECRET)',
+      '',
+      'if (signature !== expected) {',
+      "  return res.status(401).json({ error: 'Invalid signature' })",
+      '}',
+    ].join('\n')
+  }
+
+  if (title.includes('dependencia') || title.includes('dependency')) {
+    return [
+      '# Actualiza la dependencia afectada',
+      'pnpm update',
+      '# Revisa el advisory y ejecuta nuevamente el scanner.',
+    ].join('\n')
+  }
+
+  return [
+    '// Revisa el flujo afectado y aplica la recomendacion especifica:',
+    `// ${finding?.recommendation || 'Mitiga el riesgo antes de integrar este codigo.'}`,
+  ].join('\n')
+}
+
+function withFixedSnippet(finding) {
+  if (!finding || finding.fixedSnippet) return finding
+  return {
+    ...finding,
+    fixedSnippet: buildFixedSnippet(finding),
+  }
+}
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
@@ -201,6 +309,24 @@ async function getToolAvailability(toolNames) {
     }),
   )
   return Object.fromEntries(pairs)
+}
+
+export async function getScannerDiagnostics() {
+  const requiredScanners = parseRequiredScanners()
+  const optionalScanners = ['trivy']
+  const allScanners = Array.from(new Set(requiredScanners.concat(optionalScanners)))
+  const tools = await getToolAvailability(allScanners)
+  const missingRequiredTools = requiredScanners.filter((tool) => !tools[tool])
+
+  return {
+    requiredScanners,
+    tools,
+    missingRequiredTools,
+    toolCoverageRatio:
+      requiredScanners.length > 0
+        ? clamp((requiredScanners.length - missingRequiredTools.length) / requiredScanners.length, 0, 1)
+        : 1,
+  }
 }
 
 function runCommand(cmd, args, { cwd = process.cwd(), timeoutMs = config.scanTimeoutMs } = {}) {
@@ -764,7 +890,7 @@ export async function analyzeInput({ inputType, inputValue, policies }) {
       }
     }
 
-    vulnerabilities = dedupeById(vulnerabilities)
+    vulnerabilities = dedupeById(vulnerabilities).map(withFixedSnippet)
     licenses = dedupeLicenses(licenses)
 
     let rawHealthScore = 100
@@ -845,6 +971,8 @@ export async function analyzeInput({ inputType, inputValue, policies }) {
       licenses,
       meta: {
         engine: 'local-oss-orchestrator',
+        analyzerVersion: ANALYZER_VERSION,
+        rulesUpdatedAt: RULES_UPDATED_AT,
         llm: process.env.OLLAMA_MODEL ? `ollama:${process.env.OLLAMA_MODEL}` : 'none',
         tools: Array.from(new Set(toolsUsed)),
         requiredScanners,

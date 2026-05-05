@@ -12,7 +12,7 @@ import pinoHttp from 'pino-http'
 import { rateLimit } from 'express-rate-limit'
 import IORedis from 'ioredis'
 import { UnrecoverableError, Worker } from 'bullmq'
-import { config } from './lib/config.js'
+import { config, validateRuntimeConfig } from './lib/config.js'
 import { initDb, pool } from './lib/db.js'
 import {
   createOrUpdateUser,
@@ -26,7 +26,7 @@ import {
   setScanFailed,
   setScanRunning,
 } from './lib/repository.js'
-import { analyzeInput } from './lib/scanner.js'
+import { analyzeInput, getScannerDiagnostics } from './lib/scanner.js'
 import { enqueueScan, getQueueStats } from './lib/queue.js'
 
 const logger = pino({
@@ -254,6 +254,17 @@ function buildMarkdown(scan) {
       lines.push(
         `- [${String(vuln.severity || 'low').toUpperCase()}] ${vuln.title} (${vuln.id || 'N/A'}) - tool: ${vuln.tool || 'unknown'} - line: ${vuln.line || 0}`,
       )
+      if (vuln.fixedSnippet) {
+        lines.push('')
+        lines.push('  Snippet sugerido:')
+        lines.push('')
+        lines.push('  ```')
+        for (const line of String(vuln.fixedSnippet).split('\n')) {
+          lines.push(`  ${line}`)
+        }
+        lines.push('  ```')
+        lines.push('')
+      }
     }
   }
   lines.push('')
@@ -318,11 +329,13 @@ app.get('/api/auth-config', (req, res) => {
 
 app.get('/api/health', async (req, res) => {
   let dbOk = false
+  let dbError = ''
   try {
     await pool.query('SELECT 1')
     dbOk = true
-  } catch {
+  } catch (error) {
     dbOk = false
+    dbError = error instanceof Error ? error.message : 'unknown database error'
   }
 
   let queueStats = {
@@ -332,17 +345,40 @@ app.get('/api/health', async (req, res) => {
     failed: 0,
     delayed: 0,
   }
+  let queueOk = false
+  let queueError = ''
   try {
     queueStats = await getQueueStats()
-  } catch {
-    // ignore queue stats errors
+    queueOk = true
+  } catch (error) {
+    queueOk = false
+    queueError = error instanceof Error ? error.message : 'unknown queue error'
+  }
+
+  let scanners = {
+    requiredScanners: [],
+    tools: {},
+    missingRequiredTools: [],
+    toolCoverageRatio: 0,
+  }
+  try {
+    scanners = await getScannerDiagnostics()
+  } catch (error) {
+    scanners = {
+      ...scanners,
+      error: error instanceof Error ? error.message : 'unknown scanner diagnostic error',
+    }
   }
 
   res.json({
-    ok: dbOk,
+    ok: dbOk && queueOk,
     service: 'codeguard-backend',
     db: dbOk ? 'up' : 'down',
+    dbError,
+    queueStatus: queueOk ? 'up' : 'down',
+    queueError,
     queue: queueStats,
+    scanners,
     workerMode: 'integrated',
     now: new Date().toISOString(),
   })
@@ -395,17 +431,25 @@ app.post('/api/scans', async (req, res) => {
     })
   }
 
+  const rawInputValue = inputValue.trim()
+  const isGuestSnippet = currentUserId(req) === 'guest' && inputType === 'snippet'
+  const persistedInputValue = isGuestSnippet
+    ? `[guest-snippet-not-persisted:${rawInputValue.length} chars]`
+    : rawInputValue
+
   const scan = await createScan({
     id: `SCN-${nanoid(8)}`,
     userId: currentUserId(req),
     inputType,
-    inputValue: inputValue.trim(),
+    inputValue: persistedInputValue,
     status: 'queued',
     result: null,
     error: null,
   })
 
-  await enqueueScan(scan.id)
+  await enqueueScan(scan.id, {
+    transientInputValue: isGuestSnippet ? rawInputValue : null,
+  })
   return res.status(202).json({ scanId: scan.id, status: scan.status })
 })
 
@@ -476,7 +520,7 @@ function startIntegratedWorker() {
         const effectivePolicies = await getPolicies(scan.userId)
         const result = await analyzeInput({
           inputType: scan.inputType,
-          inputValue: scan.inputValue,
+          inputValue: job.data?.transientInputValue || scan.inputValue,
           policies: effectivePolicies,
         })
         await setScanCompleted(scanId, result)
@@ -534,6 +578,19 @@ function startIntegratedWorker() {
 }
 
 async function boot() {
+  validateRuntimeConfig()
+  logger.info(
+    {
+      port: config.port,
+      nodeEnv: process.env.NODE_ENV || 'development',
+      hasDatabaseUrl: config.hasExplicitDatabaseUrl,
+      hasRedisUrl: config.hasExplicitRedisUrl,
+      hasSessionSecret: config.hasExplicitSessionSecret,
+      frontendUrl: config.frontendUrl,
+      corsOrigins: allowedOrigins,
+    },
+    'Runtime configuration validated',
+  )
   await initDb()
   startIntegratedWorker()
   app.listen(config.port, () => {

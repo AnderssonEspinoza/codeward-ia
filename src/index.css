@@ -338,6 +338,46 @@ body {
   background: rgba(255, 210, 114, 0.16);
 }
 
+.cw-tool-button,
+.cw-export-button {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-hover);
+  color: var(--text-main);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.cw-tool-button {
+  min-height: 36px;
+  border-radius: 10px;
+  padding: 0 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.cw-export-button {
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 0 0.8rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.cw-tool-button:hover,
+.cw-export-button:hover {
+  border-color: rgba(255, 210, 114, 0.35);
+  color: var(--pastel-yellow);
+  background: rgba(255, 210, 114, 0.08);
+}
+
 .cw-stat-card {
   background: var(--surface);
   border: 1px solid var(--border-subtle);
@@ -346,6 +386,49 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.cw-progress-step {
+  min-height: 46px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 0.6rem;
+  color: var(--text-muted);
+  background: var(--bg-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cw-progress-step.active {
+  color: var(--pastel-yellow);
+  border-color: rgba(255, 210, 114, 0.35);
+  background: rgba(255, 210, 114, 0.08);
+}
+
+.cw-progress-step.done {
+  color: var(--pastel-green);
+  border-color: rgba(212, 224, 155, 0.28);
+}
+
+.cw-progress-step-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-hover);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+
+.cw-progress-step-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .cw-table-shell {

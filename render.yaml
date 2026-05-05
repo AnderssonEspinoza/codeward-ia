@@ -1,15 +1,12 @@
 services:
   - type: web
-    name: codeward-api
-    runtime: node
+    name: codeward-api-docker
+    runtime: docker
     plan: free
-    buildCommand: pnpm install --frozen-lockfile
-    startCommand: pnpm run start:api
+    dockerfilePath: ./Dockerfile
     autoDeploy: true
     healthCheckPath: /api/health
     envVars:
-      - key: NODE_VERSION
-        value: 20
       - key: PORT
         value: 10000
       - key: DATABASE_URL

@@ -11,12 +11,16 @@ export const scanQueue = new Queue(config.scanQueueName, {
   connection: redisConnection,
 })
 
-export async function enqueueScan(scanId) {
+export async function enqueueScan(scanId, options = {}) {
   await scanQueue.add(
     'scan',
-    { scanId },
+    {
+      scanId,
+      transientInputValue: options.transientInputValue || null,
+    },
     {
       removeOnComplete: true,
+      removeOnFail: true,
       attempts: 3,
       backoff: {
         type: 'exponential',

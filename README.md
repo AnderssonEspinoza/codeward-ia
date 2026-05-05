@@ -53,6 +53,16 @@ Haz click en la imagen para abrir el video: [public/demo.mp4](./public/demo.mp4)
 Si un escaneo real falla, la UI muestra error. El modo demo con datos simulados es manual.
 Si inicias sesión con GitHub, historial y políticas quedan aislados por usuario.
 
+## Privacidad y alcance del motor
+
+CodeWard AI no ejecuta el analisis 100% dentro del navegador. El frontend envia snippets o URLs al backend propio de CodeWard, donde se ejecutan reglas locales y scanners OSS opcionales. No se usan APIs pagas de IA para el analisis base.
+
+- En modo invitado, los snippets crudos viajan temporalmente en el job de escaneo y no se guardan como `input_value` persistente en PostgreSQL.
+- En modo GitHub OAuth, se guarda usuario, historial, politicas y resultado para poder consultar auditorias anteriores.
+- Los enlaces de GitHub se consultan para leer repositorios publicos o archivos tipo `blob`.
+- Version actual del analizador: `0.2.0`.
+- Ultima actualizacion de reglas: `2026-05-04`.
+
 ## Alcance actual del MVP
 
 - Analiza snippets y repositorios GitHub.
@@ -158,32 +168,44 @@ Si no defines `GITHUB_CLIENT_ID` y `GITHUB_CLIENT_SECRET`, la app funciona en mo
 - `OLLAMA_MODEL`, `OLLAMA_URL` (opcionales)
 - `REQUIRED_SCANNERS` (opcional): lista CSV de scanners requeridos (default: `gitleaks,semgrep,osv-scanner`)
 
-## Deploy recomendado: Render + Supabase (Render Free)
+## Deploy recomendado: Render Docker + Supabase/Upstash
 
-Este repo ya incluye `render.yaml` para crear 1 servicio:
+Este repo ya incluye `render.yaml` con `runtime: docker` para crear 1 servicio:
 
-- `codeward-api` (web service, incluye worker integrado)
+- `codeward-api-docker` (web service, incluye worker integrado)
+
+Usar Docker es importante porque el `Dockerfile` instala `gitleaks`, `semgrep` y `osv-scanner`. Si Render usa runtime Node normal, el backend puede arrancar sin scanners y la cobertura OSS sera incompleta.
 
 Flujo sugerido:
 
 1. Crea proyecto en Supabase y copia `DATABASE_URL` (pooler o direct connection).
 2. Crea Redis (Render Redis o Upstash) y copia `REDIS_URL`.
 3. En Render, conecta este repo y usa `render.yaml`.
-4. Configura en `codeward-api`:
+4. Configura en `codeward-api-docker`:
    - `DATABASE_URL`
    - `REDIS_URL`
    - `SESSION_SECRET`
    - `ADMIN_KEY`
-5. En `codeward-api` agrega además:
+5. En `codeward-api-docker` agrega además:
    - `FRONTEND_URL` (tu dominio Vercel)
    - `CORS_ORIGINS` (incluye tu dominio Vercel)
    - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_CALLBACK_URL` (si usarás login GitHub)
 
 Si solo usarás modo invitado por ahora, puedes dejar vacías las variables de GitHub OAuth.
 
-## Deploy alternativo: Render (Docker con scanners instalados)
+### Variables obligatorias en producción
 
-Si quieres cobertura real con `gitleaks + semgrep + osv-scanner` en producción, usa el `Dockerfile` incluido.
+El backend falla al arrancar si faltan estas variables en `NODE_ENV=production`:
+
+- `DATABASE_URL`
+- `REDIS_URL`
+- `SESSION_SECRET`
+
+Esto evita que Render intente usar `127.0.0.1` en producción y muestre un error opaco como `Exited with status 1`.
+
+## Deploy manual: Render Docker con scanners instalados
+
+Si creas el servicio manualmente, asegúrate de elegir Docker o de que Render detecte el `Dockerfile` incluido.
 
 Pasos:
 
@@ -205,6 +227,12 @@ Verificación rápida en runtime:
 
 ```bash
 https://TU-API.onrender.com/api/health
+```
+
+La respuesta de health incluye `scanners.tools` y `scanners.missingRequiredTools`. Para cobertura completa debe verse:
+
+```json
+"missingRequiredTools": []
 ```
 
 Después de un scan de repo, revisa en respuesta `meta.tools` que incluya scanners OSS (`gitleaks`, `semgrep`, `osv-scanner`) cuando haya hallazgos o en warnings de cobertura.
