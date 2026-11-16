@@ -473,6 +473,7 @@ export default function App() {
                 setInputValue={setInputValue}
                 inputError={inputError}
                 onAnalyze={handleAnalyze}
+                onUseDemo={useDemoResults}
                 isAuth={!!user}
               />
             )}
@@ -530,7 +531,7 @@ function GuestSaveBanner() {
   );
 }
 
-function InputView({ inputType, setInputType, inputValue, setInputValue, inputError, onAnalyze, isAuth }) {
+function InputView({ inputType, setInputType, inputValue, setInputValue, inputError, onAnalyze, onUseDemo, isAuth }) {
   const fileInputRef = useRef(null);
   const [inputNotice, setInputNotice] = useState('');
   const validationMessage = inputValue.trim() ? validateScanInput(inputType, inputValue) : '';
@@ -688,6 +689,15 @@ function InputView({ inputType, setInputType, inputValue, setInputValue, inputEr
                 <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500"/> Sesión GitHub activa.</span>
               )}
             </div>
+            <div className="flex flex-wrap gap-2 justify-end">
+              <button
+                type="button"
+                onClick={onUseDemo}
+                className="w-full sm:w-auto justify-center bg-slate-800 border border-slate-600 hover:bg-slate-700 text-slate-100 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors"
+                title="Ejemplo precargado: no ejecuta escaneo real"
+              >
+                <Play className="w-4 h-4" /> Ver reporte de ejemplo
+              </button>
             <button
               onClick={onAnalyze}
               disabled={!canAnalyze}
@@ -695,6 +705,7 @@ function InputView({ inputType, setInputType, inputValue, setInputValue, inputEr
             >
               Auditar código <ChevronRight className="w-4 h-4" />
             </button>
+            </div>
           </div>
         </div>
       </div>
